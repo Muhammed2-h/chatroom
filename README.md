@@ -14,14 +14,6 @@ A lightweight real-time chat app with modern retro design, featuring public Worl
 - **⏱️ Message Timestamps**: All messages include formatted timestamps
 - **🎯 Modern Retro UI**: Beautiful interface inspired by classic Mac OS and Vaporwave aesthetics
 
-### World Chat Admin Commands
-Administrators can manage the World Chat using special commands:
-- `/PASSWORDclearchat` - Clear all messages in World Chat
-- `/PASSWORDdelete"message"` - Delete specific messages by content
-- `/OLDPASS2NEWPASS` - Change the admin password
-
-Default admin password: `QWERTY`
-
 ### UI/UX Features
 - **Responsive Design**: Works seamlessly on desktop and mobile devices
 - **Error Handling**: User-friendly error messages displayed inline
@@ -82,12 +74,6 @@ Navigate to `http://localhost:3000`
    - If the room doesn't exist, it will be created with your passkey
    - If it exists, you must enter the correct passkey to join
 
-### Admin Commands (World Chat Only)
-To use admin commands, type them in the message box:
-- Clear all chat: `/QWERTYclearchat`
-- Delete specific message: `/QWERTYdelete"spam message"`
-- Change password: `/QWERTY2NEWPASSWORD`
-
 ## 🏗️ Project Structure
 
 ```
@@ -107,12 +93,6 @@ Edit `server.js` to modify:
 - **PORT**: Default is `3000`
 - **USER_TIMEOUT**: User activity timeout (default: 15 seconds)
 - **MAX_MESSAGES**: Maximum messages per room (default: 50)
-
-### World Chat Admin Password
-Change the default password in `server.js`:
-```javascript
-let worldAdminPassword = "QWERTY"; // Change this
-```
 
 ## 🎨 Design Philosophy
 
