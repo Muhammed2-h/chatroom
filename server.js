@@ -311,5 +311,5 @@ app.post('/leave', async (req, res) => {
     res.json({ success: true });
 });
 
-// Explicit 0.0.0.0 binding for Railway
-app.listen(PORT, '0.0.0.0', () => console.log(`Simple Chat running on port ${PORT}`));
+// Allow default binding (IPv4 + IPv6) for broad compatibility
+app.listen(PORT, () => console.log(`Simple Chat running on port ${PORT}`));
