@@ -8,6 +8,8 @@ const PORT = process.env.PORT || 3000;
 const USER_TIMEOUT = 15000;
 const MAX_MESSAGES = 50;
 
+app.get('/up', (req, res) => res.status(200).send('OK')); // Fast Health Check
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
@@ -183,14 +185,6 @@ const sanitize = (text) => sanitizeHtml(text, { allowedTags: [] });
 
 // --- Endpoints ---
 
-// Health Check for Railway
-app.get('/', (req, res, next) => {
-    // If it's a browser request (Accept html), serve the static file
-    if (req.accepts('html')) return next();
-    // Otherwise responding OK for health checks
-    res.send('OK');
-});
-
 app.post('/join', async (req, res) => {
     try {
         const { roomId, passkey } = req.body;
@@ -311,5 +305,5 @@ app.post('/leave', async (req, res) => {
     res.json({ success: true });
 });
 
-// Allow default binding (IPv4 + IPv6) for broad compatibility
-app.listen(PORT, () => console.log(`Simple Chat running on port ${PORT}`));
+// Explicit 0.0.0.0 binding is required for Railway health checks
+app.listen(PORT, '0.0.0.0', () => console.log(`Simple Chat running on port ${PORT}`));
