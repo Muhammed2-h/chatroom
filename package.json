@@ -15,7 +15,6 @@
     "messaging",
     "chatroom"
   ],
-  "author": "Muhammed",
   "license": "MIT",
   "dependencies": {
     "body-parser": "^1.20.0",
