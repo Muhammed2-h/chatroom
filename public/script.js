@@ -168,9 +168,11 @@ const poll = async () => {
     }
 };
 
+let intervalId = null;
 const startPolling = () => {
+    if (intervalId) return;
     poll();
-    setInterval(poll, 2000);
+    intervalId = setInterval(poll, 2000);
 };
 
 els.setRoomBtn.addEventListener('click', () => {

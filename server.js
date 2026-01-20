@@ -87,7 +87,8 @@ class PostgresStore {
     constructor(connectionString) {
         this.pool = new Pool({
             connectionString,
-            ssl: { rejectUnauthorized: false } // Required for most cloud DBs
+            ssl: { rejectUnauthorized: false },
+            max: 20 // Optimize limit for Railway starter tier
         });
     }
 
@@ -96,24 +97,22 @@ class PostgresStore {
         const client = await this.pool.connect();
         try {
             await client.query(`
-                CREATE TABLE IF NOT EXISTS rooms (
-                    id TEXT PRIMARY KEY,
-                    passkey TEXT
-                );
+                CREATE TABLE IF NOT EXISTS rooms (id TEXT PRIMARY KEY, passkey TEXT);
                 CREATE TABLE IF NOT EXISTS messages (
                     id SERIAL PRIMARY KEY,
                     room_id TEXT REFERENCES rooms(id),
-                    name TEXT,
-                    content TEXT,
-                    created_at BIGINT
+                    name TEXT, content TEXT, created_at BIGINT
                 );
                 CREATE TABLE IF NOT EXISTS room_users (
                     room_id TEXT REFERENCES rooms(id),
-                    name TEXT,
-                    last_seen BIGINT,
+                    name TEXT, last_seen BIGINT,
                     PRIMARY KEY (room_id, name)
                 );
                 INSERT INTO rooms (id, passkey) VALUES ('world', NULL) ON CONFLICT (id) DO NOTHING;
+                
+                -- Performance Indexes
+                CREATE INDEX IF NOT EXISTS idx_messages_room_id ON messages(room_id);
+                CREATE INDEX IF NOT EXISTS idx_room_users_room_id ON room_users(room_id);
             `);
         } finally {
             client.release();
