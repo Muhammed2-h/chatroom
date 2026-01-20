@@ -88,7 +88,9 @@ class PostgresStore {
         this.pool = new Pool({
             connectionString,
             ssl: { rejectUnauthorized: false },
-            max: 20 // Optimize limit for Railway starter tier
+            max: 20,
+            connectionTimeoutMillis: 5000,
+            idleTimeoutMillis: 30000
         });
     }
 
