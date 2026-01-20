@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const sanitizeHtml = require('sanitize-html');
@@ -112,6 +113,23 @@ class MemoryStore {
         if (!this.rooms[roomId]) return;
         if (!this.rooms[roomId].bans) this.rooms[roomId].bans = new Set();
         this.rooms[roomId].bans.add(username);
+    }
+
+    async getBannedUsers(roomId) {
+        if (!this.rooms[roomId] || !this.rooms[roomId].bans) return [];
+        return Array.from(this.rooms[roomId].bans);
+    }
+
+    async unbanUser(roomId, username) {
+        if (this.rooms[roomId] && this.rooms[roomId].bans) {
+            this.rooms[roomId].bans.delete(username);
+        }
+    }
+
+    async unbanAll(roomId) {
+        if (this.rooms[roomId]) {
+            this.rooms[roomId].bans = new Set();
+        }
     }
 }
 
@@ -261,6 +279,19 @@ class PostgresStore {
         await this.pool.query('INSERT INTO bans (room_id, name) VALUES ($1, $2) ON CONFLICT DO NOTHING', [roomId, username]);
         await this.removeUser(roomId, username);
     }
+
+    async getBannedUsers(roomId) {
+        const res = await this.pool.query('SELECT name FROM bans WHERE room_id = $1', [roomId]);
+        return res.rows.map(r => r.name);
+    }
+
+    async unbanUser(roomId, username) {
+        await this.pool.query('DELETE FROM bans WHERE room_id = $1 AND name = $2', [roomId, username]);
+    }
+
+    async unbanAll(roomId) {
+        await this.pool.query('DELETE FROM bans WHERE room_id = $1', [roomId]);
+    }
 }
 
 // Select Store with fallback
@@ -397,9 +428,39 @@ app.post('/send', async (req, res) => {
 
                 const banMatch = content.match(/^\/ban\s+(.+)$/);
                 if (banMatch) {
-                    let targetUser = banMatch[1].replace(/^"(.*)"$/, '$1'); // Support both /ban user and /ban "user"
-                    await store.banUser(roomId, targetUser);
-                    return res.json({ success: true, system: `User ${targetUser} banned` });
+                    const banArg = banMatch[1].replace(/^"(.*)"$/, '$1');
+
+                    // /ban users - list banned users
+                    if (banArg.toLowerCase() === 'users' || banArg.toLowerCase() === 'list') {
+                        const bannedUsers = await store.getBannedUsers(roomId);
+                        if (bannedUsers.length === 0) {
+                            return res.json({ success: true, system: "No users are banned in this room" });
+                        }
+                        return res.json({ success: true, system: `Banned users: ${bannedUsers.join(', ')}` });
+                    }
+
+                    // /ban "username" - ban a user
+                    await store.banUser(roomId, banArg);
+                    return res.json({ success: true, system: `User ${banArg} banned` });
+                }
+
+                // /unban commands
+                const unbanMatch = content.match(/^\/unban\s+(.+)$/);
+                if (unbanMatch) {
+                    const unbanArg = unbanMatch[1].replace(/^"(.*)"$/, '$1');
+
+                    // /unban all - unban everyone
+                    if (unbanArg.toLowerCase() === 'all') {
+                        await store.unbanAll(roomId);
+                        return res.json({ success: true, system: "All users have been unbanned" });
+                    }
+
+                    // /unban "user1,user2" - unban multiple users
+                    const usersToUnban = unbanArg.split(',').map(u => u.trim());
+                    for (const user of usersToUnban) {
+                        await store.unbanUser(roomId, user);
+                    }
+                    return res.json({ success: true, system: `Unbanned: ${usersToUnban.join(', ')}` });
                 }
             }
 
