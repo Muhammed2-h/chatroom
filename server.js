@@ -8,7 +8,11 @@ const PORT = process.env.PORT || 3000;
 const USER_TIMEOUT = 15000;
 const MAX_MESSAGES = 50;
 
-app.get('/up', (req, res) => res.status(200).send('OK')); // Fast Health Check
+// Health check - MUST be first, before any middleware
+app.get('/up', (req, res) => {
+    console.log('Health check received');
+    res.status(200).send('OK');
+});
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -435,5 +439,8 @@ app.post('/leave', async (req, res) => {
     res.json({ success: true });
 });
 
-// Default binding (let Node decide IPv4/IPv6)
-app.listen(PORT, () => console.log(`Simple Chat running on port ${PORT}`));
+// Explicitly bind to 0.0.0.0 for Railway compatibility
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Simple Chat running on port ${PORT}`);
+    console.log('Server ready for health checks');
+});
