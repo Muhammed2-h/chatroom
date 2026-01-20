@@ -139,14 +139,28 @@ class PostgresStore {
             try {
                 const client = await this.pool.connect();
                 try {
+                    // Create tables if not exists
                     await client.query(`
                         CREATE TABLE IF NOT EXISTS rooms (id TEXT PRIMARY KEY, passkey TEXT);
                         CREATE TABLE IF NOT EXISTS messages (id SERIAL PRIMARY KEY, room_id TEXT REFERENCES rooms(id), name TEXT, content TEXT, created_at BIGINT);
-                        CREATE TABLE IF NOT EXISTS room_users (room_id TEXT REFERENCES rooms(id), name TEXT, last_seen BIGINT, session_token TEXT, is_admin BOOLEAN DEFAULT FALSE, PRIMARY KEY (room_id, name));
+                        CREATE TABLE IF NOT EXISTS room_users (room_id TEXT REFERENCES rooms(id), name TEXT, last_seen BIGINT, PRIMARY KEY (room_id, name));
                         CREATE TABLE IF NOT EXISTS bans (room_id TEXT REFERENCES rooms(id), name TEXT, PRIMARY KEY (room_id, name));
                         INSERT INTO rooms (id, passkey) VALUES ('world', NULL) ON CONFLICT (id) DO NOTHING;
                         CREATE INDEX IF NOT EXISTS idx_messages_room_id ON messages(room_id);
                         CREATE INDEX IF NOT EXISTS idx_room_users_room_id ON room_users(room_id);
+                    `);
+
+                    // Add new columns if they don't exist (for migration)
+                    await client.query(`
+                        DO $$ 
+                        BEGIN 
+                            IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='room_users' AND column_name='session_token') THEN
+                                ALTER TABLE room_users ADD COLUMN session_token TEXT;
+                            END IF;
+                            IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='room_users' AND column_name='is_admin') THEN
+                                ALTER TABLE room_users ADD COLUMN is_admin BOOLEAN DEFAULT FALSE;
+                            END IF;
+                        END $$;
                     `);
                     console.log("✅ Database initialized successfully");
                     return;
