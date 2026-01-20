@@ -292,4 +292,4 @@ app.post('/leave', async (req, res) => {
     res.json({ success: true });
 });
 
-app.listen(PORT, () => console.log(`Simple Chat running at http://localhost:${PORT}`));
+app.listen(PORT, '0.0.0.0', () => console.log(`Simple Chat running on port ${PORT}`));
