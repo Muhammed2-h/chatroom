@@ -1,7 +1,7 @@
 const BEEP_URL = "data:audio/mp3;base64,SUQzBAAAAAABAFRYWFgAAAASAAADbWFqb3JfYnJhbmQAZGFzaABUWFhYAAAAEQAAA21pbm9yX3ZlcnNpb24AMABUWFhYAAAAHAAAA2NvbXBhdGlibGVfYnJhbmRzAGlzbzZtcDQxAFRTU0UAAAAPAAADTGF2ZjU5LjI3LjEwMAAAAAAAAAAAAAAA//uQZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAAEAAABSwAHCwsVFRkZHR0hISkpLS0xMTU1OTk9PUFBRUVJSU1NUVFVVVlZWlpeXmJiZmZqam5ucnJ6en5+goKGhpiYmZmdnZ+foaGkpKWlqKiorKywMDMzOTk9PT5+foSEjIyVlZaWnZ2hoaWlqamwsLW1u7vAwMjIzMzQ0NXV2trg4OTk7Ozw8Pb2+vr///8AAAA5TGF2YzU5LjM3AAAAAAAAAAAAAAAAJAAAAAAAAAAAASwAAAAAAAABSvyqfQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//uQzAABAAAB4AAAAOIABBwAAAEETGF2YzU5LjM3AAAh+gAAASwAAAAAAAAAABF//uQzAAD/8AAAaQAAAAgAAA0gAAAB5B/8HwHwHgPgPAP/8AAf/4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/8AAAAAD/8AAAA";
 
 let roomId = new URLSearchParams(window.location.search).get('room');
-let passkey = '', myUsername = '', isJoined = false, lastMessageId = -1, isPolling = false;
+let passkey = '', myUsername = '', sessionToken = '', isJoined = false, lastMessageId = -1, isPolling = false, isAdmin = false;
 const audioObj = new Audio(BEEP_URL);
 
 const $ = (id) => document.getElementById(id);
@@ -122,23 +122,40 @@ const poll = async () => {
     isPolling = true;
 
     try {
-        const url = `/poll?roomId=${encodeURIComponent(roomId)}&passkey=${encodeURIComponent(passkey)}&username=${encodeURIComponent(myUsername)}`;
+        const url = `/poll?roomId=${encodeURIComponent(roomId)}&passkey=${encodeURIComponent(passkey)}&username=${encodeURIComponent(myUsername)}&token=${encodeURIComponent(sessionToken)}`;
         const res = await fetch(url);
 
         if (res.status === 403) {
+            const data = await res.json();
             isJoined = false;
-            alert('Session expired or invalid passkey.');
+            clearInterval(intervalId);
+            intervalId = null;
+            if (data.banned) {
+                alert('You have been banned from this room.');
+            } else {
+                alert('Session expired or invalid. Please join again.');
+            }
             window.location.reload();
             return;
         }
 
         if (res.ok) {
-            const { messages = [], users = [] } = await res.json();
-            updateOnlineList(users);
+            const data = await res.json();
+            updateOnlineList(data.users);
+            isAdmin = data.isAdmin;
+
+            if (isAdmin) {
+                els.headerTitle.textContent = (roomId === 'world' ? '🌎 World Chat' : `Room: ${roomId}`) + ' [ADMIN]';
+                if (data.passkey) {
+                    els.pkVal.textContent = data.passkey;
+                }
+            }
+
             els.messageList.querySelectorAll('li.pending').forEach(el => el.remove());
 
             const shouldScroll = (els.messageList.scrollHeight - els.messageList.scrollTop - els.messageList.clientHeight) < 50;
             let hasNew = false;
+            const messages = data.messages || [];
 
             if (messages.length === 0 && lastMessageId > 0 ||
                 messages.length > 0 && messages[messages.length - 1].id < lastMessageId) {
@@ -205,8 +222,18 @@ els.form.addEventListener('submit', async (e) => {
 
             if (res.ok) {
                 const data = await res.json();
-                if (data.success) { passkey = mainVal; switchToChatMode(); }
+                if (data.success) {
+                    passkey = mainVal;
+                    sessionToken = data.token;
+                    isAdmin = !!data.isAdmin;
+                    switchToChatMode();
+                }
                 else { els.mainInput.value = ''; showFormStatus('Invalid passkey'); }
+            } else if (res.status === 403) {
+                const data = await res.json();
+                showFormStatus(data.error || 'Access denied');
+                els.actionBtn.disabled = false;
+                return;
             } else if (res.status === 409) {
                 showFormStatus('Username already taken. Choose another.');
                 els.actionBtn.disabled = false;
@@ -222,7 +249,7 @@ els.form.addEventListener('submit', async (e) => {
             await fetch('/send', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ roomId, passkey, name: nameVal, content: mainVal })
+                body: JSON.stringify({ roomId, passkey, name: nameVal, content: mainVal, token: sessionToken })
             });
         }
     } catch (e) {
@@ -239,7 +266,7 @@ els.logoutBtn.addEventListener('click', async () => {
             await fetch('/leave', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ roomId, passkey, username: myUsername }),
+                body: JSON.stringify({ roomId, passkey, username: myUsername, token: sessionToken }),
                 keepalive: true
             });
         }
