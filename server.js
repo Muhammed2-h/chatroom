@@ -179,7 +179,10 @@ class PostgresStore {
 }
 
 // Select Store
-const store = process.env.DATABASE_URL ? new PostgresStore(process.env.DATABASE_URL) : new MemoryStore();
+// Temporarily forcing MemoryStore to restore application stability
+const store = new MemoryStore();
+// const store = process.env.DATABASE_URL ? new PostgresStore(process.env.DATABASE_URL) : new MemoryStore();
+
 store.init().catch(console.error);
 
 // --- Helpers ---
@@ -294,4 +297,4 @@ app.post('/leave', async (req, res) => {
     res.json({ success: true });
 });
 
-app.listen(PORT, '0.0.0.0', () => console.log(`Simple Chat running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Simple Chat running at http://localhost:${PORT}`));
