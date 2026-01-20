@@ -305,5 +305,5 @@ app.post('/leave', async (req, res) => {
     res.json({ success: true });
 });
 
-// Explicit 0.0.0.0 binding is required for Railway health checks
-app.listen(PORT, '0.0.0.0', () => console.log(`Simple Chat running on port ${PORT}`));
+// Default binding (let Node decide IPv4/IPv6)
+app.listen(PORT, () => console.log(`Simple Chat running on port ${PORT}`));
