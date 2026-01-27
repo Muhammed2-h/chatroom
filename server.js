@@ -67,7 +67,7 @@ class MemoryStore {
     async getRoom(id) { return this.rooms[id] || null; }
 
     async createRoom(id, passkey) {
-        this.rooms[id] = { passkey, messages: [], users: {}, bans: new Set(), typing: {} };
+        this.rooms[id] = { passkey, messages: [], users: {}, bans: new Set(), typing: {}, pinnedMessage: null };
     }
 
     async getMessages(id) { return this.rooms[id]?.messages || []; }
@@ -130,6 +130,21 @@ class MemoryStore {
                 if (!msg.readBy.includes(username)) msg.readBy.push(username);
             }
         });
+    }
+
+    // Pinned messages
+    async pinMessage(id, messageId) {
+        const room = this.rooms[id];
+        if (!room) return;
+        room.pinnedMessage = room.messages.find(m => m.id == messageId) || null;
+    }
+
+    async unpinMessage(id) {
+        if (this.rooms[id]) this.rooms[id].pinnedMessage = null;
+    }
+
+    async getPinnedMessage(id) {
+        return this.rooms[id]?.pinnedMessage || null;
     }
 
     async clearMessages(id) { if (this.rooms[id]) this.rooms[id].messages = []; }
@@ -417,6 +432,30 @@ class PostgresStore {
             .filter(([_, lastRead]) => lastRead >= messageId)
             .map(([username]) => username);
     }
+
+    // In-memory pinned messages
+    pinnedCache = {};
+
+    async pinMessage(id, messageId) {
+        // Need to fetch message details to cache it properly or at least ID
+        // For simplicity, we just store the ID and fetch details if needed, 
+        // but MemoryStore stores full object. Let's fetch it.
+        try {
+            const r = await this.pool.query('SELECT * FROM messages WHERE id=$1', [messageId]);
+            if (r.rows[0]) {
+                this.pinnedCache[id] = {
+                    id: r.rows[0].id,
+                    name: r.rows[0].name,
+                    content: r.rows[0].content,
+                    time: r.rows[0].created_at
+                };
+            }
+        } catch (e) { }
+    }
+
+    async unpinMessage(id) { delete this.pinnedCache[id]; }
+
+    async getPinnedMessage(id) { return this.pinnedCache[id] || null; }
 }
 
 // Initialize store
@@ -562,14 +601,15 @@ app.get('/poll', async (req, res) => {
             if (!await store.touchUser(roomId, username, token)) return res.status(403).json({ error: 'Invalid session' });
         }
 
-        const [messages, users, isAdmin, typing] = await Promise.all([
+        const [messages, users, isAdmin, typing, pinnedMessage] = await Promise.all([
             store.getMessages(roomId),
             store.getUsers(roomId),
             username ? store.isAdmin(roomId, username) : false,
-            store.getTyping(roomId)
+            store.getTyping(roomId),
+            store.getPinnedMessage(roomId)
         ]);
 
-        res.json({ messages, users, isAdmin, typing, passkey: isAdmin && roomId !== 'world' ? room.passkey : undefined });
+        res.json({ messages, users, isAdmin, typing, pinnedMessage, passkey: isAdmin && roomId !== 'world' ? room.passkey : undefined });
     } catch (e) { res.status(500).end(); }
 });
 
@@ -705,6 +745,38 @@ app.post('/read', async (req, res) => {
     } catch (e) {
         res.status(500).end();
     }
+});
+
+// Pinned messages endpoints
+app.post('/pin', async (req, res) => {
+    try {
+        const { roomId, passkey, messageId, username, token } = req.body;
+        const room = await store.getRoom(roomId);
+        if (!room) return res.status(404).end();
+        if (roomId !== 'world' && room.passkey !== passkey) return res.status(403).end();
+        if (!await store.verifyToken(roomId, username, token)) return res.status(403).end();
+
+        // Only admin can pin
+        if (!await store.isAdmin(roomId, username)) return res.status(403).json({ error: 'Admin only' });
+
+        await store.pinMessage(roomId, messageId);
+        res.json({ success: true });
+    } catch (e) { res.status(500).end(); }
+});
+
+app.post('/unpin', async (req, res) => {
+    try {
+        const { roomId, passkey, username, token } = req.body;
+        const room = await store.getRoom(roomId);
+        if (!room) return res.status(404).end();
+        if (roomId !== 'world' && room.passkey !== passkey) return res.status(403).end();
+        if (!await store.verifyToken(roomId, username, token)) return res.status(403).end();
+
+        if (!await store.isAdmin(roomId, username)) return res.status(403).json({ error: 'Admin only' });
+
+        await store.unpinMessage(roomId);
+        res.json({ success: true });
+    } catch (e) { res.status(500).end(); }
 });
 
 // Start server

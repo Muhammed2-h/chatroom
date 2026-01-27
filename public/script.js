@@ -1,4 +1,4 @@
-const BEEP_URL = "data:audio/mp3;base64,SUQzBAAAAAABAFRYWFgAAAASAAADbWFqb3JfYnJhbmQAZGFzaABUWFhYAAAAEQAAA21pbm9yX3ZlcnNpb24AMABUWFhYAAAAHAAAA2NvbXBhdGlibGVfYnJhbmRzAGlzbzZtcDQxAFRTU0UAAAAPAAADTGF2ZjU5LjI3LjEwMAAAAAAAAAAAAAAA//uQZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAAEAAABSwAHCwsVFRkZHR0hISkpLS0xMTU1OTk9PUFBRUVJSU1NUVFVVVlZWlpeXmJiZmZqam5ucnJ6en5+goKGhpiYmZmdnZ+foaGkpKWlqKiorKywMDMzOTk9PT5+foSEjIyVlZaWnZ2hoaWlqamwsLW1u7vAwMjIzMzQ0NXV2trg4OTk7Ozw8Pb2+vr///8AAAA5TGF2YzU5LjM3AAAAAAAAAAAAAAAAJAAAAAAAAAAAASwAAAAAAAABSvyqfQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//uQzAABAAAB4AAAAOIABBwAAAEETGF2YzU5LjM3AAAh+gAAASwAAAAAAAAAABF//uQzAAD/8AAAaQAAAAgAAA0gAAAB5B/8HwHwHgPgPAP/8AAf/4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/8AAAAAD/8AAAA";
+const BEEP_URL = "data:audio/mp3;base64,SUQzBAAAAAABAFRYWFgAAAASAAADbWFqb3JfYnJhbmQAZGFzaABUWFhYAAAAEQAAA21pbm9yX3ZlcnNpb24AMABUWFhYAAAAHAAAA2NvbXBhdGlibGVfYnJhbmRzAGlzbzZtcDQxAFRTU0UAAAAPAAADTGF2ZjU5LjI3LjEwMAAAAAAAAAAAAAAA//uQZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAAEAAABSwAHCwsVFRkZHR0hISkpLS0xMTU1OTk9PUFBRUVJSU1NUVFVVVlZWlpeXmJiZmZqam5ucnJ6en5+goKGhpiYmZmdnZ+foaGkpKWlqKiorKywMDMzOTk9PT5+foSEjIyVlZaWnZ2hoaWlqamwsLW1u7vAwMjIzMzQ0NXV2trg4OTk7Ozw8Pb2+vr///8AAAA5TGF2YzU5LjM3AAAAAAAAAAAAAAAAJAAAAAAAAAAAASwAAAAAAAABSvyqfQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//uQzAABAAAB4AAAAOIABBwAAAEETGF2YzU5LjM3AAAh+gAAASwAAAAAAAAAABF//uQzAAD/8AAAaQAAAAgAAA0gAAAB5B/8HwHwHgPgPAP/8AAf/4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/+A//4D//gP/8AAAAAD/8AAAA";
 
 // Auth state
 const authToken = localStorage.getItem('authToken');
@@ -18,6 +18,7 @@ let roomId = new URLSearchParams(window.location.search).get('room');
 let passkey = '', myUsername = '', sessionToken = '', isJoined = false, lastMessageId = -1, isPolling = false, isAdmin = false;
 let typingTimeout = null;
 let isTyping = false;
+let currentPinnedMessage = null;
 const audioObj = new Audio(BEEP_URL);
 
 const $ = (id) => document.getElementById(id);
@@ -32,17 +33,26 @@ const els = {
     roomControls: $('room-controls'), pkVal: $('pk-val'),
     soundToggle: $('sound-toggle'), clearBtn: $('clear-btn'),
     logoutBtn: $('logout-btn'), onlineUsersDiv: $('online-users'),
-    formStatus: $('form-status'), typingIndicator: $('typing-indicator')
+    formStatus: $('form-status'), typingIndicator: $('typing-indicator'),
+    pinnedBar: $('pinned-message-bar'), pinnedContent: $('pinned-message-content'),
+    unpinBtn: $('unpin-btn')
 };
 
 // ===== DARK MODE & THEMES =====
 const initTheme = () => {
     const darkMode = localStorage.getItem('darkMode') === 'true';
     const theme = localStorage.getItem('theme') || 'default';
+    const notifications = localStorage.getItem('notifications') === 'true';
 
     if (darkMode) {
         document.documentElement.classList.add('dark');
         $('dark-mode-toggle').checked = true;
+    }
+
+    // Notifications check
+    $('notifications-toggle').checked = notifications;
+    if (notifications && Notification.permission !== 'granted') {
+        Notification.requestPermission();
     }
 
     applyTheme(theme);
@@ -63,6 +73,14 @@ $('dark-mode-toggle').addEventListener('change', (e) => {
     const isDark = e.target.checked;
     document.documentElement.classList.toggle('dark', isDark);
     localStorage.setItem('darkMode', isDark);
+});
+
+$('notifications-toggle').addEventListener('change', (e) => {
+    const enabled = e.target.checked;
+    localStorage.setItem('notifications', enabled);
+    if (enabled && Notification.permission !== 'granted') {
+        Notification.requestPermission();
+    }
 });
 
 document.querySelectorAll('.theme-option').forEach(opt => {
@@ -87,6 +105,14 @@ $('settings-modal').addEventListener('click', (e) => {
         $('settings-modal').classList.remove('show');
     }
 });
+
+// ===== NOTIFICATIONS =====
+const sendNotification = (title, body) => {
+    // Only send if hidden or not focused, AND notifications enabled
+    if (document.hidden && localStorage.getItem('notifications') === 'true' && Notification.permission === 'granted') {
+        new Notification(title, { body, icon: '/favicon.ico' });
+    }
+};
 
 // ===== USER BAR =====
 const showFormStatus = (msg) => {
@@ -160,7 +186,7 @@ const initJoinMode = () => {
     els.actionBtn.disabled = false;
     els.roomControls.style.display = 'none';
     els.onlineUsersDiv.style.display = 'none';
-    els.messageList.innerHTML = '<li id="status-message">Please join the room...</li><template><li class=pending><small>…</small><span class="msg-content">…</span><div class="msg-reactions"></div><div class="reaction-picker"><button data-emoji="👍">👍</button><button data-emoji="❤️">❤️</button><button data-emoji="😂">😂</button><button data-emoji="😮">😮</button><button data-emoji="😢">😢</button></div></li></template>';
+    els.messageList.innerHTML = '<li id="status-message">Please join the room...</li><template><li class=pending><small>…</small><span class="msg-content">…</span><div class="msg-reactions"></div><div class="reaction-picker"><button data-emoji="👍">👍</button><button data-emoji="❤️">❤️</button><button data-emoji="😂">😂</button><button data-emoji="😮">😮</button><button data-emoji="😢">😢</button><div class="admin-actions" style="margin-left:auto; display:none;"><button class="pin-msg-btn" title="Pin Message">📌</button></div></div></li></template>';
     lastMessageId = -1;
     els.nameInput.focus();
 };
@@ -235,6 +261,53 @@ const updateTypingIndicator = (typingUsers) => {
     }
 };
 
+// ===== PINNED MESSAGES =====
+const updatePinnedMessage = (msg) => {
+    if (!msg) {
+        els.pinnedBar.style.display = 'none';
+        currentPinnedMessage = null;
+        return;
+    }
+
+    // Don't redraw if same
+    if (currentPinnedMessage && currentPinnedMessage.id === msg.id) return;
+
+    currentPinnedMessage = msg;
+    els.pinnedBar.style.display = 'flex';
+    els.pinnedContent.textContent = `${msg.name}: ${msg.content}`;
+
+    // Show/hide unpin button for admin logic handled in polling
+    els.unpinBtn.style.display = isAdmin ? 'block' : 'none';
+};
+
+const pinMessage = async (msgId) => {
+    try {
+        await fetch('/pin', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ roomId, passkey, messageId: msgId, username: myUsername, token: sessionToken })
+        });
+    } catch (e) { console.error(e); }
+};
+
+const unpinMessage = async () => {
+    try {
+        await fetch('/unpin', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ roomId, passkey, username: myUsername, token: sessionToken })
+        });
+    } catch (e) { console.error(e); }
+};
+
+els.unpinBtn.addEventListener('click', unpinMessage);
+els.pinnedBar.addEventListener('click', (e) => {
+    if (e.target !== els.unpinBtn && currentPinnedMessage) {
+        const el = document.querySelector(`li[data-id="${currentPinnedMessage.id}"]`);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+});
+
 // ===== MESSAGE REACTIONS =====
 const addReaction = async (messageId, emoji) => {
     try {
@@ -268,34 +341,104 @@ const renderReactions = (li, reactions) => {
     addBtn.textContent = '+';
     addBtn.onclick = (e) => {
         e.stopPropagation();
+        // Hide all other pickers
+        document.querySelectorAll('.reaction-picker.show').forEach(p => p.classList.remove('show'));
+
         const picker = li.querySelector('.reaction-picker');
         picker.classList.toggle('show');
     };
     container.appendChild(addBtn);
 };
 
-// ===== MESSAGES =====
+// Close pickers on click elsewhere
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.reaction-picker') && !e.target.classList.contains('add-reaction-btn')) {
+        document.querySelectorAll('.reaction-picker.show').forEach(p => p.classList.remove('show'));
+    }
+});
+
+// ===== MESSAGES & FORMATTING =====
+const formatTime = (ts) => new Date(ts * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+const formatDateHeader = (ts) => {
+    const date = new Date(ts * 1000);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (date.toDateString() === today.toDateString()) return 'Today';
+    if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
+    return date.toLocaleDateString();
+};
+
+const processMentions = (content) => {
+    return content.replace(/@(\w+)/g, (match, username) => {
+        return `<span class="mention">@${username}</span>`;
+    });
+};
+
 const playSound = () => els.soundToggle.checked && audioObj.play().catch(() => { });
+
+const insertDateHeaderIfNeeded = (ts) => {
+    const dateStr = formatDateHeader(ts);
+    const lastDateHeader = els.messageList.lastElementChild?.classList.contains('date-header')
+        ? els.messageList.lastElementChild.textContent
+        : null;
+
+    // Check previous message time if exists
+    const lastMsgLi = els.messageList.querySelector('li:not(.date-header):last-child');
+    if (lastMsgLi && !lastMsgLi.classList.contains('pending')) {
+        // We need to compare timestamps, but simpler is to check if we need a header
+        // For new messages, likely we do if it's a new day or list is empty
+    }
+
+    // Simplification: logic is tricky to append perfectly without date on every message
+    // Instead we'll check the last header in the list
+    const headers = document.querySelectorAll('.date-header');
+    const lastHeader = headers.length > 0 ? headers[headers.length - 1].textContent : '';
+
+    if (lastHeader !== dateStr) {
+        const li = document.createElement('li');
+        li.className = 'date-header';
+        li.innerHTML = `<span>${dateStr}</span>`;
+        els.messageList.append(li);
+    }
+};
 
 const appendMessage = (msg) => {
     const template = els.messageList.querySelector('template');
     if (!template) return;
+
+    // Check date header
+    // We only add date header if this message is significantly newer or first
+    // For simplicity in this append-only model, we check if the date changed from last received message
+    if (!msg.pending) {
+        insertDateHeaderIfNeeded(msg.time);
+    }
+
     const li = template.content.cloneNode(true).querySelector('li');
 
     if (msg.pending) {
         li.classList.add('pending');
         li.querySelector('small').textContent = msg.name;
+        li.querySelector('.msg-content').innerHTML = processMentions(msg.content); // basic sanitization handled by server, but text content vs innerHTML...
+        // For pending, just text
         li.querySelector('.msg-content').textContent = msg.content;
     } else {
         li.classList.remove('pending');
-        const timeStr = new Date(msg.time * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const timeStr = formatTime(msg.time);
 
         // Read receipt
         const readReceipt = msg.name === myUsername ?
             `<span class="read-receipt ${msg.readBy?.length > 1 ? 'read' : ''}">✓${msg.readBy?.length > 1 ? '✓' : ''}</span>` : '';
 
         li.querySelector('small').innerHTML = `<b>${msg.name}</b> <span style="opacity:0.8; font-weight:normal;">${timeStr}</span>${readReceipt}`;
-        li.querySelector('.msg-content').textContent = msg.content;
+
+        // Content with mentions
+        // We trust the server sanitized logic, but let's be safe and escape HTML first then add mentions
+        const safeContent = msg.content.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        li.querySelector('.msg-content').innerHTML = processMentions(safeContent);
+
         li.dataset.id = msg.id;
         li.dataset.user = msg.name;
 
@@ -303,12 +446,27 @@ const appendMessage = (msg) => {
         renderReactions(li, msg.reactions);
 
         // Reaction picker buttons
-        li.querySelectorAll('.reaction-picker button').forEach(btn => {
+        li.querySelectorAll('.reaction-picker button:not(.admin-actions button)').forEach(btn => {
             btn.onclick = () => {
                 addReaction(msg.id, btn.dataset.emoji);
                 li.querySelector('.reaction-picker').classList.remove('show');
             };
         });
+
+        // Admin actions
+        if (isAdmin) {
+            const actions = li.querySelector('.admin-actions');
+            actions.style.display = 'block';
+            actions.querySelector('.pin-msg-btn').onclick = () => {
+                pinMessage(msg.id);
+                li.querySelector('.reaction-picker').classList.remove('show');
+            };
+        }
+
+        // Highlight pinned
+        if (currentPinnedMessage && currentPinnedMessage.id === msg.id) {
+            li.classList.add('pinned');
+        }
     }
 
     els.messageList.append(li);
@@ -347,6 +505,7 @@ const poll = async () => {
             const data = await res.json();
             updateOnlineList(data.users);
             updateTypingIndicator(data.typing);
+            updatePinnedMessage(data.pinnedMessage);
             isAdmin = data.isAdmin;
 
             if (isAdmin) {
@@ -354,6 +513,7 @@ const poll = async () => {
                 if (data.passkey) {
                     els.pkVal.textContent = data.passkey;
                 }
+                els.unpinBtn.style.display = currentPinnedMessage ? 'block' : 'none';
             }
 
             els.messageList.querySelectorAll('li.pending').forEach(el => el.remove());
@@ -371,12 +531,34 @@ const poll = async () => {
             messages.forEach(msg => {
                 const existing = els.messageList.querySelector(`li[data-id="${msg.id}"]`);
                 if (existing) {
-                    // Update reactions on existing message
+                    // Update reactions
                     renderReactions(existing, msg.reactions);
+
+                    // Update read receipt
+                    const readReceipt = msg.name === myUsername ?
+                        `<span class="read-receipt ${msg.readBy?.length > 1 ? 'read' : ''}">✓${msg.readBy?.length > 1 ? '✓' : ''}</span>` : '';
+                    if (existing.querySelector('.read-receipt')) {
+                        existing.querySelector('.read-receipt').className = `read-receipt ${msg.readBy?.length > 1 ? 'read' : ''}`;
+                        existing.querySelector('.read-receipt').innerHTML = `✓${msg.readBy?.length > 1 ? '✓' : ''}`;
+                    }
+
+                    // Update pinned style
+                    if (currentPinnedMessage && currentPinnedMessage.id === msg.id) existing.classList.add('pinned');
+                    else existing.classList.remove('pinned');
+
                 } else if (msg.id > lastMessageId) {
                     appendMessage(msg);
                     lastMessageId = msg.id;
                     hasNew = true;
+
+                    // Check for mention
+                    if (msg.content.includes(`@${myUsername}`)) {
+                        sendNotification(`New mention in ${roomId}`, `${msg.name}: ${msg.content}`);
+                        playSound(); // Alert sound for mention
+                    } else if (msg.name !== myUsername) {
+                        // Regular message notification
+                        sendNotification(`New message in ${roomId}`, `${msg.name}: ${msg.content}`);
+                    }
                 }
             });
 
@@ -387,7 +569,6 @@ const poll = async () => {
 
             if (shouldScroll && hasNew) els.messageList.scrollTop = els.messageList.scrollHeight;
 
-            // Mark messages as read
             if (messages.length > 0) {
                 fetch('/read', {
                     method: 'POST',
@@ -463,7 +644,6 @@ els.form.addEventListener('submit', async (e) => {
                 els.mainInput.value = '';
             }
         } else {
-            // Clear typing indicator when sending
             isTyping = false;
             clearTimeout(typingTimeout);
             sendTypingStatus(false);
