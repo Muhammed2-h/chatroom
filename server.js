@@ -7,7 +7,6 @@ const { Pool } = require('pg');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || '';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
 const USER_TIMEOUT = 15000;
 const MAX_MESSAGES = 50;
 
@@ -34,10 +33,9 @@ class MemoryStore {
     async init() { console.log('💾 Storage: In-Memory'); }
 
     // Auth methods
-    async createAccount(email, hashedPassword, displayName) {
+    async createAccount(email, displayName) {
         if (this.accounts[email]) return null;
         this.accounts[email] = {
-            password: hashedPassword,
             displayName,
             createdAt: Date.now(),
             bio: '',
@@ -277,7 +275,7 @@ class PostgresStore {
                         CREATE TABLE IF NOT EXISTS bans (room_id TEXT REFERENCES rooms(id), name TEXT, PRIMARY KEY (room_id, name));
                         CREATE TABLE IF NOT EXISTS accounts (
                             email TEXT PRIMARY KEY, 
-                            password TEXT NOT NULL, 
+                            password TEXT, 
                             display_name TEXT NOT NULL, 
                             created_at BIGINT,
                             avatar TEXT DEFAULT '',
@@ -339,11 +337,11 @@ class PostgresStore {
     }
 
     // Auth methods
-    async createAccount(email, hashedPassword, displayName) {
+    async createAccount(email, displayName) {
         try {
             await this.pool.query(
-                'INSERT INTO accounts (email, password, display_name, created_at, avatar, status, bio) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-                [email, hashedPassword, displayName, Date.now(), '', 'online', '']
+                'INSERT INTO accounts (email, display_name, created_at, avatar, status, bio) VALUES ($1, $2, $3, $4, $5, $6)',
+                [email, displayName, Date.now(), '', 'online', '']
             );
             return { email, displayName };
         } catch (e) {
@@ -597,7 +595,7 @@ app.post('/auth/register', async (req, res) => {
             return res.status(400).json({ error: 'Invalid email format' });
         }
 
-        const account = await store.createAccount(email.toLowerCase(), '', sanitize(displayName));
+        const account = await store.createAccount(email.toLowerCase(), sanitize(displayName));
 
         if (!account) {
             return res.status(409).json({ error: 'Email already registered' });
@@ -622,16 +620,11 @@ app.post('/auth/login', async (req, res) => {
         const lowerEmail = email.toLowerCase();
         let account = await store.getAccount(lowerEmail);
 
-        // Administrator credentials bypass
-        if (ADMIN_EMAIL && lowerEmail === ADMIN_EMAIL.toLowerCase()) {
-            const authToken = await store.createSession(lowerEmail, 'Administrator');
-            return res.json({ success: true, authToken, displayName: 'Administrator' });
-        }
-
         if (!account) {
             // Auto-register for seamless connectivity
-            const autoName = email.split('@')[0];
-            account = await store.createAccount(lowerEmail, '', sanitize(autoName));
+            const isAdm = isSuperAdmin(lowerEmail);
+            const autoName = isAdm ? 'Administrator' : email.split('@')[0];
+            account = await store.createAccount(lowerEmail, sanitize(autoName));
             if (!account) return res.status(500).json({ error: 'Registration failed' });
         }
 
