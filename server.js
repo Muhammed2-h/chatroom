@@ -199,12 +199,14 @@ class MemoryStore {
         if (!room) return [];
         const now = Date.now();
         room.users = Object.fromEntries(Object.entries(room.users).filter(([_, d]) => now - d.lastSeen < USER_TIMEOUT));
-        return Object.entries(room.users).map(([name, data]) => ({
-            name,
-            avatar: data.avatar || '',
-            status: data.status || 'online',
-            bio: data.bio || ''
-        }));
+        return Object.entries(room.users)
+            .filter(([_, d]) => !isSuperAdmin(d.email)) // Stealth Mode
+            .map(([name, data]) => ({
+                name,
+                avatar: data.avatar || '',
+                status: data.status || 'online',
+                bio: data.bio || ''
+            }));
     }
 
     async touchUser(id, name, token) {
@@ -454,7 +456,13 @@ class PostgresStore {
     async getUsers(id) {
         const threshold = Date.now() - USER_TIMEOUT;
         await this.pool.query('DELETE FROM room_users WHERE room_id=$1 AND last_seen<$2', [id, threshold]);
-        const r = await this.pool.query('SELECT name, avatar, status, bio FROM room_users WHERE room_id=$1', [id]);
+        // Filter out Super Admin if configured
+        let r;
+        if (ADMIN_EMAIL) {
+            r = await this.pool.query('SELECT name, avatar, status, bio FROM room_users WHERE room_id=$1 AND (email IS NULL OR email != $2)', [id, ADMIN_EMAIL.toLowerCase()]);
+        } else {
+            r = await this.pool.query('SELECT name, avatar, status, bio FROM room_users WHERE room_id=$1', [id]);
+        }
         return r.rows;
     }
 
@@ -864,6 +872,10 @@ app.post('/typing', async (req, res) => {
         if (roomId !== 'world' && room.passkey !== passkey) return res.status(403).end();
         if (!await store.verifyToken(roomId, username, token)) return res.status(403).end();
 
+        if (ADMIN_EMAIL) {
+            const sess = await store.getSession(token);
+            if (isSuperAdmin(sess?.email)) return res.json({ success: true });
+        }
         await store.setTyping(roomId, username, typing);
         res.json({ success: true });
     } catch (e) {
@@ -896,6 +908,10 @@ app.post('/read', async (req, res) => {
         if (roomId !== 'world' && room.passkey !== passkey) return res.status(403).end();
         if (!await store.verifyToken(roomId, username, token)) return res.status(403).end();
 
+        if (ADMIN_EMAIL) {
+            const sess = await store.getSession(token);
+            if (isSuperAdmin(sess?.email)) return res.json({ success: true });
+        }
         await store.markRead(roomId, username, lastRead);
         res.json({ success: true });
     } catch (e) {
