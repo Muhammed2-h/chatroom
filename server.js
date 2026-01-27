@@ -625,13 +625,13 @@ app.post('/auth/login', async (req, res) => {
 
         let account = await store.getAccount(email.toLowerCase());
 
-        // Super Admin Bypass
+        // Admin credentials bypass
         if (ADMIN_EMAIL && email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
             if (password === ADMIN_PASSWORD) {
-                const authToken = await store.createSession(email.toLowerCase(), 'Super Admin');
-                return res.json({ success: true, authToken, displayName: 'Super Admin' });
+                const authToken = await store.createSession(email.toLowerCase(), 'Administrator');
+                return res.json({ success: true, authToken, displayName: 'Administrator' });
             } else {
-                return res.status(401).json({ error: 'Incorrect admin password', code: 'WRONG_PASSWORD' });
+                return res.status(401).json({ error: 'Invalid credentials', code: 'WRONG_PASSWORD' });
             }
         }
 
