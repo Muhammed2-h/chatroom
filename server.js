@@ -363,18 +363,31 @@ app.post('/auth/login', async (req, res) => {
 
         const account = await store.getAccount(email.toLowerCase());
         if (!account) {
-            return res.status(401).json({ error: 'Invalid email or password' });
+            return res.status(401).json({ error: 'Account not found. Please register first.', code: 'NOT_FOUND' });
         }
 
         const valid = await bcrypt.compare(password, account.password);
         if (!valid) {
-            return res.status(401).json({ error: 'Invalid email or password' });
+            return res.status(401).json({ error: 'Incorrect password', code: 'WRONG_PASSWORD' });
         }
 
         const authToken = await store.createSession(email.toLowerCase(), account.displayName);
         res.json({ success: true, authToken, displayName: account.displayName });
     } catch (e) {
         console.error('Login error:', e.message);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+// Check if email exists (for real-time validation)
+app.get('/auth/check-email', async (req, res) => {
+    try {
+        const { email } = req.query;
+        if (!email) return res.json({ exists: false });
+
+        const account = await store.getAccount(email.toLowerCase());
+        res.json({ exists: !!account, displayName: account?.displayName });
+    } catch (e) {
         res.status(500).json({ error: 'Server error' });
     }
 });

@@ -192,6 +192,35 @@
             animation: shake 0.5s ease-out;
         }
 
+        .email-status {
+            font-size: 0.75rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        .email-status.checking {
+            display: block;
+            color: var(--text-muted);
+        }
+
+        .email-status.found {
+            display: block;
+            color: #22c55e;
+        }
+
+        .email-status.not-found {
+            display: block;
+            color: #f87171;
+        }
+
+        .form-group input.valid {
+            border-color: #22c55e;
+        }
+
+        .form-group input.invalid {
+            border-color: #f87171;
+        }
+
         @keyframes shake {
 
             0%,
@@ -284,12 +313,15 @@
                 <div class="form-group">
                     <label for="login-email">Email</label>
                     <input type="email" id="login-email" placeholder="you@example.com" required>
+                    <p id="login-email-status" class="email-status"></p>
                 </div>
                 <div class="form-group">
                     <label for="login-password">Password</label>
-                    <input type="password" id="login-password" placeholder="••••••••" required>
+                    <input type="password" id="login-password" placeholder="••••••••" required disabled>
+                    <p class="password-requirements" id="login-password-hint" style="display:none;">Enter password for
+                        this account</p>
                 </div>
-                <button type="submit" class="submit-btn">Sign In</button>
+                <button type="submit" class="submit-btn" disabled>Sign In</button>
             </form>
 
             <!-- Register Form -->
@@ -350,6 +382,81 @@
         function hideError() {
             document.getElementById('error-message').classList.remove('show');
         }
+
+        // Email validation state
+        let emailCheckTimeout = null;
+        let emailExists = false;
+        let accountDisplayName = '';
+
+        // Real-time email validation for login
+        const loginEmailInput = document.getElementById('login-email');
+        const loginPasswordInput = document.getElementById('login-password');
+        const loginSubmitBtn = document.querySelector('#login-form .submit-btn');
+        const emailStatus = document.getElementById('login-email-status');
+        const passwordHint = document.getElementById('login-password-hint');
+
+        async function checkEmail(email) {
+            emailStatus.className = 'email-status checking';
+            emailStatus.textContent = 'Checking...';
+            loginEmailInput.classList.remove('valid', 'invalid');
+
+            try {
+                const res = await fetch(`/auth/check-email?email=${encodeURIComponent(email)}`);
+                const data = await res.json();
+
+                if (data.exists) {
+                    emailExists = true;
+                    accountDisplayName = data.displayName;
+                    emailStatus.className = 'email-status found';
+                    emailStatus.textContent = `✓ Welcome back, ${data.displayName}!`;
+                    loginEmailInput.classList.add('valid');
+                    loginPasswordInput.disabled = false;
+                    loginPasswordInput.focus();
+                    passwordHint.style.display = 'block';
+                    loginSubmitBtn.disabled = false;
+                } else {
+                    emailExists = false;
+                    emailStatus.className = 'email-status not-found';
+                    emailStatus.textContent = '✗ Account not found. Please register first.';
+                    loginEmailInput.classList.add('invalid');
+                    loginPasswordInput.disabled = true;
+                    loginPasswordInput.value = '';
+                    passwordHint.style.display = 'none';
+                    loginSubmitBtn.disabled = true;
+                }
+            } catch (e) {
+                emailStatus.className = 'email-status';
+                emailStatus.textContent = '';
+            }
+        }
+
+        loginEmailInput.addEventListener('input', () => {
+            // Clear previous timeout
+            if (emailCheckTimeout) clearTimeout(emailCheckTimeout);
+
+            const email = loginEmailInput.value.trim();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+            if (!emailRegex.test(email)) {
+                emailStatus.className = 'email-status';
+                emailStatus.textContent = '';
+                loginEmailInput.classList.remove('valid', 'invalid');
+                loginPasswordInput.disabled = true;
+                loginSubmitBtn.disabled = true;
+                return;
+            }
+
+            // Debounce the email check (500ms after stop typing)
+            emailCheckTimeout = setTimeout(() => checkEmail(email), 500);
+        });
+
+        loginEmailInput.addEventListener('blur', () => {
+            const email = loginEmailInput.value.trim();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (emailRegex.test(email) && !emailExists) {
+                checkEmail(email);
+            }
+        });
 
         // Login form
         document.getElementById('login-form').addEventListener('submit', async (e) => {
