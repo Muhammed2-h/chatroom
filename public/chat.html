@@ -2,9 +2,10 @@
 <html lang="en">
 
 <head>
-	<meta charset=utf-8>
-	<meta name=viewport content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-	<title>RoundChat</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+	<meta name="description" content="RoundChat - Secure, lightning-fast real-time chat with modern retro aesthetics.">
+	<title>RoundChat - Connecting people instantly</title>
 	<style>
 		:root {
 			--bg-color: #f0f0eb;
@@ -774,10 +775,10 @@
 		<div id="typing-indicator"></div>
 
 		<!-- Messages List -->
-		<ul id=messages>
+		<ul id="messages" role="log" aria-live="polite">
 			<li id="status-message">Please join the room...</li>
-			<template>
-				<li class=pending>
+			<template id="msg-template">
+				<li class="pending">
 					<small>…</small>
 					<span class="msg-content">…</span>
 					<div class="msg-reactions"></div>

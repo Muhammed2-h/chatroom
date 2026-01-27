@@ -14,12 +14,9 @@ const THEME_COLORS = {
     pink: { accent: '#db2777', accentLight: '#f472b6' }
 };
 
-let roomId = new URLSearchParams(window.location.search).get('room');
-let passkey = '', myUsername = '', sessionToken = '', isJoined = false, lastMessageId = -1, isPolling = false, isAdmin = false;
-let typingTimeout = null;
-let isTyping = false;
-let currentPinnedMessage = null;
 const audioObj = new Audio(BEEP_URL);
+let isTabActive = true;
+let pollFailCount = 0;
 
 const $ = (id) => document.getElementById(id);
 const $$ = (sel) => document.querySelector(sel);
@@ -29,14 +26,18 @@ const els = {
     setRoomBtn: $('set-room-btn'), initialRoomInput: $('initial-room-input'),
     headerTitle: $('header-title'), form: $('chat-form'),
     nameInput: $$('input[name="name"]'), mainInput: $('main-input'),
-    actionBtn: $('action-btn'), messageList: $$('ul#messages'),
+    actionBtn: $('action-btn'), messageList: $('messages'),
     roomControls: $('room-controls'), pkVal: $('pk-val'),
     soundToggle: $('sound-toggle'), clearBtn: $('clear-btn'),
     logoutBtn: $('logout-btn'), onlineUsersDiv: $('online-users'),
     formStatus: $('form-status'), typingIndicator: $('typing-indicator'),
     pinnedBar: $('pinned-message-bar'), pinnedContent: $('pinned-message-content'),
-    unpinBtn: $('unpin-btn')
+    unpinBtn: $('unpin-btn'), msgTemplate: $('msg-template')
 };
+
+let roomId = new URLSearchParams(window.location.search).get('room');
+let passkey = '', myUsername = '', sessionToken = '', isJoined = false, lastMessageId = -1, isPolling = false, isAdmin = false;
+let typingTimeout = null, isTyping = false, currentPinnedMessage = null;
 
 // ===== DARK MODE & THEMES =====
 const initTheme = () => {
@@ -186,7 +187,7 @@ const initJoinMode = () => {
     els.actionBtn.disabled = false;
     els.roomControls.style.display = 'none';
     els.onlineUsersDiv.style.display = 'none';
-    els.messageList.innerHTML = '<li id="status-message">Please join the room...</li><template><li class=pending><small>…</small><span class="msg-content">…</span><div class="msg-reactions"></div><div class="reaction-picker"><button data-emoji="👍">👍</button><button data-emoji="❤️">❤️</button><button data-emoji="😂">😂</button><button data-emoji="😮">😮</button><button data-emoji="😢">😢</button><div class="admin-actions" style="margin-left:auto; display:none;"><button class="pin-msg-btn" title="Pin Message">📌</button></div></div></li></template>';
+    els.messageList.innerHTML = '<li id="status-message">Please join the room...</li>';
     lastMessageId = -1;
     els.nameInput.focus();
 };
@@ -406,7 +407,7 @@ const insertDateHeaderIfNeeded = (ts) => {
 };
 
 const appendMessage = (msg) => {
-    const template = els.messageList.querySelector('template');
+    const template = els.msgTemplate;
     if (!template) return;
 
     // Check date header
@@ -475,7 +476,11 @@ const appendMessage = (msg) => {
 
 const updateOnlineList = (users) => {
     if (!users) return;
-    els.onlineUsersDiv.innerHTML = users.map(u => `<span>● ${u}</span>`).join('');
+    els.onlineUsersDiv.innerHTML = users.map(u => {
+        const name = typeof u === 'string' ? u : u.name;
+        const status = u.status || 'online';
+        return `<span title="${u.bio || ''}">● ${name}</span>`;
+    }).join('');
 };
 
 // ===== POLLING =====
@@ -486,11 +491,12 @@ const poll = async () => {
     try {
         const url = `/poll?roomId=${encodeURIComponent(roomId)}&passkey=${encodeURIComponent(passkey)}&username=${encodeURIComponent(myUsername)}&token=${encodeURIComponent(sessionToken)}`;
         const res = await fetch(url);
+        pollFailCount = 0;
 
         if (res.status === 403) {
             const data = await res.json();
             isJoined = false;
-            clearInterval(intervalId);
+            if (intervalId) clearTimeout(intervalId);
             intervalId = null;
             if (data.banned) {
                 alert('You have been banned from this room.');
@@ -531,42 +537,31 @@ const poll = async () => {
             messages.forEach(msg => {
                 const existing = els.messageList.querySelector(`li[data-id="${msg.id}"]`);
                 if (existing) {
-                    // Update reactions
                     renderReactions(existing, msg.reactions);
-
-                    // Update read receipt
                     const readReceipt = msg.name === myUsername ?
                         `<span class="read-receipt ${msg.readBy?.length > 1 ? 'read' : ''}">✓${msg.readBy?.length > 1 ? '✓' : ''}</span>` : '';
                     if (existing.querySelector('.read-receipt')) {
                         existing.querySelector('.read-receipt').className = `read-receipt ${msg.readBy?.length > 1 ? 'read' : ''}`;
                         existing.querySelector('.read-receipt').innerHTML = `✓${msg.readBy?.length > 1 ? '✓' : ''}`;
                     }
-
-                    // Update pinned style
                     if (currentPinnedMessage && currentPinnedMessage.id === msg.id) existing.classList.add('pinned');
                     else existing.classList.remove('pinned');
-
                 } else if (msg.id > lastMessageId) {
                     appendMessage(msg);
                     lastMessageId = msg.id;
                     hasNew = true;
-
-                    // Check for mention
                     if (msg.content.includes(`@${myUsername}`)) {
                         sendNotification(`New mention in ${roomId}`, `${msg.name}: ${msg.content}`);
-                        playSound(); // Alert sound for mention
+                        playSound();
                     } else if (msg.name !== myUsername) {
-                        // Regular message notification
                         sendNotification(`New message in ${roomId}`, `${msg.name}: ${msg.content}`);
                     }
                 }
             });
 
             if (hasNew && messages[messages.length - 1].name !== myUsername) playSound();
-
             const items = Array.from(els.messageList.querySelectorAll('li:not(template)'));
             if (items.length > 100) items.slice(0, items.length - 100).forEach(el => el.remove());
-
             if (shouldScroll && hasNew) els.messageList.scrollTop = els.messageList.scrollHeight;
 
             if (messages.length > 0) {
@@ -578,17 +573,27 @@ const poll = async () => {
             }
         }
     } catch (e) {
-        console.log('Poll error (ignored)', e);
+        pollFailCount++;
+        if (pollFailCount > 5) showFormStatus('Connection lost. Reconnecting...');
     } finally {
         isPolling = false;
     }
 };
 
+document.addEventListener('visibilitychange', () => {
+    isTabActive = !document.hidden;
+    if (isTabActive && isJoined) poll();
+});
+
 let intervalId = null;
 const startPolling = () => {
-    if (intervalId) return;
-    poll();
-    intervalId = setInterval(poll, 2000);
+    if (intervalId) clearTimeout(intervalId);
+    const runPoll = async () => {
+        await poll();
+        const delay = isTabActive ? 2000 : 10000;
+        intervalId = setTimeout(runPoll, delay);
+    };
+    runPoll();
 };
 
 // ===== EVENT LISTENERS =====
@@ -598,7 +603,6 @@ els.setRoomBtn.addEventListener('click', () => {
 });
 
 els.initialRoomInput.addEventListener('keypress', (e) => e.key === 'Enter' && els.setRoomBtn.click());
-
 $('world-chat-btn').addEventListener('click', () => { roomId = 'world'; showChatInterface(); });
 
 els.form.addEventListener('submit', async (e) => {
@@ -608,8 +612,6 @@ els.form.addEventListener('submit', async (e) => {
 
     if (!nameVal) return;
     if (isJoined && !mainVal) return;
-    // Allow empty passkey for creating/joining open rooms (except world which hides input)
-    // if (!isJoined && roomId !== 'world' && !mainVal) return; 
 
     els.actionBtn.disabled = true;
 
@@ -628,8 +630,10 @@ els.form.addEventListener('submit', async (e) => {
                     sessionToken = data.token;
                     isAdmin = !!data.isAdmin;
                     switchToChatMode();
+                } else {
+                    els.mainInput.value = '';
+                    showFormStatus('Invalid passkey');
                 }
-                else { els.mainInput.value = ''; showFormStatus('Invalid passkey'); }
             } else if (res.status === 403) {
                 const data = await res.json();
                 showFormStatus(data.error || 'Access denied');
@@ -687,7 +691,7 @@ els.clearBtn.addEventListener('click', async () => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ roomId, passkey })
         });
-        els.messageList.innerHTML = '<template><li class=pending><small>…</small><span class="msg-content">…</span><div class="msg-reactions"></div></li></template>';
+        els.messageList.innerHTML = '';
         lastMessageId = -1;
     } catch (e) {
         console.error(e);

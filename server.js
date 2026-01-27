@@ -34,8 +34,45 @@ class MemoryStore {
     // Auth methods
     async createAccount(email, hashedPassword, displayName) {
         if (this.accounts[email]) return null;
-        this.accounts[email] = { password: hashedPassword, displayName, createdAt: Date.now() };
+        this.accounts[email] = {
+            password: hashedPassword,
+            displayName,
+            createdAt: Date.now(),
+            bio: '',
+            avatar: '',
+            status: 'online'
+        };
         return { email, displayName };
+    }
+
+    async updateProfile(email, { bio, avatar, status, displayName }) {
+        const account = this.accounts[email];
+        if (!account) return null;
+
+        if (bio !== undefined) account.bio = bio;
+        if (avatar !== undefined) account.avatar = avatar;
+        if (status !== undefined) account.status = status;
+
+        if (displayName !== undefined) {
+            account.displayName = displayName;
+            // Update active sessions
+            for (const t in this.sessions) {
+                if (this.sessions[t].email === email) this.sessions[t].displayName = displayName;
+            }
+        }
+
+        // Update profile in all active rooms
+        for (const roomId in this.rooms) {
+            const roomUsers = this.rooms[roomId].users;
+            for (const userName in roomUsers) {
+                if (roomUsers[userName].email === email || userName === account.displayName) {
+                    if (bio !== undefined) roomUsers[userName].bio = bio;
+                    if (avatar !== undefined) roomUsers[userName].avatar = avatar;
+                    if (status !== undefined) roomUsers[userName].status = status;
+                }
+            }
+        }
+        return account;
     }
 
     async getAccount(email) {
@@ -66,9 +103,15 @@ class MemoryStore {
     // Room methods
     async getRoom(id) { return this.rooms[id] || null; }
 
-    async createRoom(id, passkey) {
-        this.rooms[id] = { passkey, messages: [], users: {}, bans: new Set(), typing: {}, pinnedMessage: null };
+    async createRoom(id, passkey, description = '') {
+        this.rooms[id] = { passkey, description, messages: [], users: {}, bans: new Set(), typing: {}, pinnedMessage: null };
     }
+
+    async updateRoom(id, description) {
+        if (this.rooms[id]) this.rooms[id].description = description;
+    }
+
+    async getRoomDescription(id) { return this.rooms[id]?.description || ''; }
 
     async getMessages(id) { return this.rooms[id]?.messages || []; }
 
@@ -158,7 +201,12 @@ class MemoryStore {
         if (!room) return [];
         const now = Date.now();
         room.users = Object.fromEntries(Object.entries(room.users).filter(([_, d]) => now - d.lastSeen < USER_TIMEOUT));
-        return Object.keys(room.users);
+        return Object.entries(room.users).map(([name, data]) => ({
+            name,
+            avatar: data.avatar || '',
+            status: data.status || 'online',
+            bio: data.bio || ''
+        }));
     }
 
     async touchUser(id, name, token) {
@@ -168,8 +216,18 @@ class MemoryStore {
         return true;
     }
 
-    async setUser(id, name, token, isAdmin = false) {
-        if (this.rooms[id]) this.rooms[id].users[name] = { token, lastSeen: Date.now(), isAdmin };
+    async setUser(id, name, token, isAdmin = false, profile = {}) {
+        if (this.rooms[id]) {
+            this.rooms[id].users[name] = {
+                token,
+                lastSeen: Date.now(),
+                isAdmin,
+                email: profile.email || null,
+                avatar: profile.avatar || '',
+                status: profile.status || 'online',
+                bio: profile.bio || ''
+            };
+        }
     }
 
     async setAdmin(id, name, isAdmin = true) {
@@ -218,11 +276,30 @@ class PostgresStore {
                 const client = await this.pool.connect();
                 try {
                     await client.query(`
-                        CREATE TABLE IF NOT EXISTS rooms (id TEXT PRIMARY KEY, passkey TEXT);
+                        CREATE TABLE IF NOT EXISTS rooms (id TEXT PRIMARY KEY, passkey TEXT, description TEXT DEFAULT '');
                         CREATE TABLE IF NOT EXISTS messages (id SERIAL PRIMARY KEY, room_id TEXT REFERENCES rooms(id), name TEXT, content TEXT, created_at BIGINT);
-                        CREATE TABLE IF NOT EXISTS room_users (room_id TEXT REFERENCES rooms(id), name TEXT, last_seen BIGINT, PRIMARY KEY (room_id, name));
+                        CREATE TABLE IF NOT EXISTS room_users (
+                            room_id TEXT REFERENCES rooms(id), 
+                            name TEXT, 
+                            last_seen BIGINT, 
+                            session_token TEXT,
+                            is_admin BOOLEAN DEFAULT FALSE,
+                            avatar TEXT DEFAULT '',
+                            status TEXT DEFAULT 'online',
+                            bio TEXT DEFAULT '',
+                            email TEXT,
+                            PRIMARY KEY (room_id, name)
+                        );
                         CREATE TABLE IF NOT EXISTS bans (room_id TEXT REFERENCES rooms(id), name TEXT, PRIMARY KEY (room_id, name));
-                        CREATE TABLE IF NOT EXISTS accounts (email TEXT PRIMARY KEY, password TEXT NOT NULL, display_name TEXT NOT NULL, created_at BIGINT);
+                        CREATE TABLE IF NOT EXISTS accounts (
+                            email TEXT PRIMARY KEY, 
+                            password TEXT NOT NULL, 
+                            display_name TEXT NOT NULL, 
+                            created_at BIGINT,
+                            avatar TEXT DEFAULT '',
+                            status TEXT DEFAULT 'online',
+                            bio TEXT DEFAULT ''
+                        );
                         CREATE TABLE IF NOT EXISTS sessions (token TEXT PRIMARY KEY, email TEXT REFERENCES accounts(email), display_name TEXT, expires_at BIGINT);
                         INSERT INTO rooms (id, passkey) VALUES ('world', NULL) ON CONFLICT DO NOTHING;
                         CREATE INDEX IF NOT EXISTS idx_msg_room ON messages(room_id);
@@ -231,11 +308,38 @@ class PostgresStore {
                     `);
                     await client.query(`
                         DO $$ BEGIN
+                            -- rooms
+                            IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='rooms' AND column_name='description') THEN
+                                ALTER TABLE rooms ADD COLUMN description TEXT DEFAULT '';
+                            END IF;
+                            -- room_users
                             IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='room_users' AND column_name='session_token') THEN
                                 ALTER TABLE room_users ADD COLUMN session_token TEXT;
                             END IF;
                             IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='room_users' AND column_name='is_admin') THEN
                                 ALTER TABLE room_users ADD COLUMN is_admin BOOLEAN DEFAULT FALSE;
+                            END IF;
+                            IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='room_users' AND column_name='avatar') THEN
+                                ALTER TABLE room_users ADD COLUMN avatar TEXT DEFAULT '';
+                            END IF;
+                            IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='room_users' AND column_name='status') THEN
+                                ALTER TABLE room_users ADD COLUMN status TEXT DEFAULT 'online';
+                            END IF;
+                            IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='room_users' AND column_name='bio') THEN
+                                ALTER TABLE room_users ADD COLUMN bio TEXT DEFAULT '';
+                            END IF;
+                            IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='room_users' AND column_name='email') THEN
+                                ALTER TABLE room_users ADD COLUMN email TEXT;
+                            END IF;
+                            -- accounts
+                            IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='accounts' AND column_name='avatar') THEN
+                                ALTER TABLE accounts ADD COLUMN avatar TEXT DEFAULT '';
+                            END IF;
+                            IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='accounts' AND column_name='status') THEN
+                                ALTER TABLE accounts ADD COLUMN status TEXT DEFAULT 'online';
+                            END IF;
+                            IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='accounts' AND column_name='bio') THEN
+                                ALTER TABLE accounts ADD COLUMN bio TEXT DEFAULT '';
                             END IF;
                         END $$;
                     `);
@@ -254,8 +358,8 @@ class PostgresStore {
     async createAccount(email, hashedPassword, displayName) {
         try {
             await this.pool.query(
-                'INSERT INTO accounts (email, password, display_name, created_at) VALUES ($1, $2, $3, $4)',
-                [email, hashedPassword, displayName, Date.now()]
+                'INSERT INTO accounts (email, password, display_name, created_at, avatar, status, bio) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+                [email, hashedPassword, displayName, Date.now(), '', 'online', '']
             );
             return { email, displayName };
         } catch (e) {
@@ -267,6 +371,40 @@ class PostgresStore {
     async getAccount(email) {
         const r = await this.pool.query('SELECT * FROM accounts WHERE email=$1', [email]);
         return r.rows[0] ? { ...r.rows[0], displayName: r.rows[0].display_name } : null;
+    }
+
+    async updateProfile(email, { bio, avatar, status, displayName }) {
+        const setClauses = [];
+        const values = [email];
+        let idx = 2;
+
+        if (bio !== undefined) { setClauses.push(`bio=$${idx++}`); values.push(bio); }
+        if (avatar !== undefined) { setClauses.push(`avatar=$${idx++}`); values.push(avatar); }
+        if (status !== undefined) { setClauses.push(`status=$${idx++}`); values.push(status); }
+        if (displayName !== undefined) { setClauses.push(`display_name=$${idx++}`); values.push(displayName); }
+
+        if (setClauses.length === 0) return;
+
+        await this.pool.query(`UPDATE accounts SET ${setClauses.join(', ')} WHERE email=$1`, values);
+
+        if (displayName !== undefined) {
+            await this.pool.query('UPDATE sessions SET display_name=$1 WHERE email=$2', [displayName, email]);
+        }
+
+        // Update profile in all active rooms
+        const updateRoomUsers = [];
+        const ruValues = [email];
+        let ruIdx = 2;
+        if (bio !== undefined) { updateRoomUsers.push(`bio=$${ruIdx++}`); ruValues.push(bio); }
+        if (avatar !== undefined) { updateRoomUsers.push(`avatar=$${ruIdx++}`); ruValues.push(avatar); }
+        if (status !== undefined) { updateRoomUsers.push(`status=$${ruIdx++}`); ruValues.push(status); }
+
+        if (updateRoomUsers.length > 0) {
+            await this.pool.query(
+                `UPDATE room_users SET ${updateRoomUsers.join(', ')} WHERE email=$1`,
+                ruValues
+            );
+        }
     }
 
     async createSession(email, displayName) {
@@ -300,13 +438,27 @@ class PostgresStore {
         return r.rows[0] || null;
     }
 
-    async createRoom(id, passkey) {
-        await this.pool.query('INSERT INTO rooms (id,passkey) VALUES ($1,$2) ON CONFLICT DO NOTHING', [id, passkey]);
+    async createRoom(id, passkey, description = '') {
+        await this.pool.query('INSERT INTO rooms (id,passkey,description) VALUES ($1,$2,$3) ON CONFLICT DO NOTHING', [id, passkey, description]);
+    }
+
+    async updateRoom(id, description) {
+        await this.pool.query('UPDATE rooms SET description=$2 WHERE id=$1', [id, description]);
+    }
+
+    async getRoomDescription(id) {
+        const r = await this.pool.query('SELECT description FROM rooms WHERE id=$1', [id]);
+        return r.rows[0]?.description || '';
     }
 
     async getMessages(id) {
         const r = await this.pool.query('SELECT id,name,content,created_at as time FROM messages WHERE room_id=$1 ORDER BY id DESC LIMIT $2', [id, MAX_MESSAGES]);
-        return r.rows.reverse().map(x => ({ ...x, time: +x.time }));
+        return r.rows.reverse().map(x => ({
+            ...x,
+            time: +x.time,
+            reactions: this.getReactions(id, x.id),
+            readBy: this.getReadBy(id, x.id)
+        }));
     }
 
     async addMessage(id, msg) {
@@ -320,8 +472,8 @@ class PostgresStore {
     async getUsers(id) {
         const threshold = Date.now() - USER_TIMEOUT;
         await this.pool.query('DELETE FROM room_users WHERE room_id=$1 AND last_seen<$2', [id, threshold]);
-        const r = await this.pool.query('SELECT name FROM room_users WHERE room_id=$1', [id]);
-        return r.rows.map(x => x.name);
+        const r = await this.pool.query('SELECT name, avatar, status, bio FROM room_users WHERE room_id=$1', [id]);
+        return r.rows;
     }
 
     async touchUser(id, name, token) {
@@ -329,10 +481,10 @@ class PostgresStore {
         return r.rowCount > 0;
     }
 
-    async setUser(id, name, token, isAdmin = false) {
+    async setUser(id, name, token, isAdmin = false, profile = {}) {
         await this.pool.query(
-            'INSERT INTO room_users (room_id,name,last_seen,session_token,is_admin) VALUES ($1,$2,$3,$4,$5) ON CONFLICT (room_id,name) DO UPDATE SET last_seen=$3,session_token=$4,is_admin=$5',
-            [id, name, Date.now(), token, isAdmin]
+            'INSERT INTO room_users (room_id,name,last_seen,session_token,is_admin,avatar,status,bio,email) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT (room_id,name) DO UPDATE SET last_seen=$3,session_token=$4,is_admin=$5,avatar=$6,status=$7,bio=$8,email=$9',
+            [id, name, Date.now(), token, isAdmin, profile.avatar || '', profile.status || 'online', profile.bio || '', profile.email || null]
         );
     }
 
@@ -550,7 +702,29 @@ app.get('/auth/me', async (req, res) => {
     const session = await store.getSession(authToken);
     if (!session) return res.status(401).json({ error: 'Session expired' });
 
-    res.json({ email: session.email, displayName: session.displayName });
+    const account = await store.getAccount(session.email);
+    res.json({
+        email: session.email,
+        displayName: session.displayName,
+        avatar: account?.avatar || '',
+        bio: account?.bio || '',
+        status: account?.status || 'online'
+    });
+});
+
+app.post('/auth/profile/update', async (req, res) => {
+    try {
+        const { authToken, bio, avatar, status, displayName } = req.body;
+        if (!authToken) return res.status(401).end();
+
+        const session = await store.getSession(authToken);
+        if (!session) return res.status(401).end();
+
+        await store.updateProfile(session.email, { bio, avatar, status, displayName });
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: 'Server error' });
+    }
 });
 
 // --- Chat Routes ---
@@ -571,9 +745,14 @@ app.post('/join', async (req, res) => {
 
         // Check Guest restrictions
         let isLoggedIn = false;
+        let profile = {};
         if (authToken) {
             const session = await store.getSession(authToken);
-            if (session) isLoggedIn = true;
+            if (session) {
+                isLoggedIn = true;
+                const acc = await store.getAccount(session.email);
+                if (acc) profile = { avatar: acc.avatar, bio: acc.bio, status: acc.status, email: session.email };
+            }
         }
 
         if (room) {
@@ -599,7 +778,7 @@ app.post('/join', async (req, res) => {
             if (!await store.checkUsername(roomId, username)) {
                 return res.status(409).json({ error: 'Username taken' });
             }
-            await store.setUser(roomId, username, token, false);
+            await store.setUser(roomId, username, token, false, profile);
             return res.json({ success: true, status: 'joined', token });
         }
 
@@ -613,8 +792,9 @@ app.post('/join', async (req, res) => {
         }
 
         // Allow creating room (Private if passkey, Open if no passkey)
-        await store.createRoom(roomId, passkey || ''); // Treat null/undefined as empty string (Open)
-        if (username) await store.setUser(roomId, username, token, true);
+        const description = req.body.description ? sanitize(req.body.description) : '';
+        await store.createRoom(roomId, passkey || '', description);
+        if (username) await store.setUser(roomId, username, token, true, profile);
         res.json({ success: true, status: 'created', token, isAdmin: true });
     } catch (e) {
         console.error('Join error:', e.message);
@@ -641,7 +821,15 @@ app.get('/poll', async (req, res) => {
             store.getPinnedMessage(roomId)
         ]);
 
-        res.json({ messages, users, isAdmin, typing, pinnedMessage, passkey: isAdmin && roomId !== 'world' ? room.passkey : undefined });
+        res.json({
+            messages,
+            users,
+            isAdmin,
+            typing,
+            pinnedMessage,
+            passkey: isAdmin && roomId !== 'world' ? room.passkey : undefined,
+            description: room.description || ''
+        });
     } catch (e) { res.status(500).end(); }
 });
 
