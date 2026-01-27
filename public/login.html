@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="description" content="Sign in to RoundChat to connect with your rooms and friends.">
-    <title>RoundChat - Secure Login</title>
+    <title>RoundChat - Seamless Connectivity</title>
     <style>
         :root {
             --bg-color: #f0f0eb;
@@ -42,12 +42,12 @@
 
         .logo {
             text-align: center;
-            margin-bottom: 1.5rem;
+            margin-bottom: 2rem;
         }
 
         .logo h1 {
             font-family: 'Courier New', monospace;
-            font-size: 2rem;
+            font-size: 2.5rem;
             font-weight: 700;
             color: #444;
             text-shadow: 2px 2px 0 #ccc;
@@ -55,215 +55,109 @@
 
         .logo p {
             color: #666;
-            font-size: 0.9rem;
-            margin-top: 0.3rem;
+            font-size: 1rem;
+            margin-top: 0.5rem;
         }
 
         .auth-card {
             background: #fff;
             border: 2px solid #333;
             border-radius: 8px;
-            padding: 2rem;
-            box-shadow: 4px 4px 0 #ccc;
-        }
-
-        .tabs {
-            display: flex;
-            margin-bottom: 1.5rem;
-            gap: 0.5rem;
-        }
-
-        .tab {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid #999;
-            border-bottom: 2px solid #555;
-            border-right: 2px solid #555;
-            border-radius: 4px;
-            background: #e0e0e0;
-            color: #333;
-            font-family: inherit;
-            font-size: 0.9rem;
-            font-weight: 600;
-            cursor: pointer;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            transition: all 0.1s ease;
-        }
-
-        .tab.active {
-            background: #000080;
-            color: white;
-            border: none;
-            box-shadow: 2px 2px 0 #444;
-        }
-
-        .tab:hover:not(.active) {
-            background: #ccc;
+            padding: 2.5rem;
+            box-shadow: 6px 6px 0 #ccc;
         }
 
         .form-group {
-            margin-bottom: 1.2rem;
+            margin-bottom: 1.5rem;
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 0.4rem;
-            font-size: 0.85rem;
+            margin-bottom: 0.6rem;
+            font-size: 0.9rem;
             font-weight: 600;
-            color: #444;
+            color: #333;
         }
 
         .form-group input {
             width: 100%;
-            padding: 12px;
+            padding: 14px;
             border: 2px solid #555;
             border-radius: 6px;
             background: #fff;
-            font-size: 1rem;
+            font-size: 1.1rem;
             font-family: inherit;
-            transition: border-color 0.2s;
+            transition: all 0.2s;
         }
 
         .form-group input:focus {
             outline: none;
-            border-color: #000080;
-        }
-
-        .form-group input:disabled {
-            background: #eee;
-            color: #888;
-        }
-
-        .form-group input.valid {
-            border-color: #228b22;
-        }
-
-        .form-group input.invalid {
-            border-color: #cc0000;
+            border-color: var(--accent-h1);
+            box-shadow: 0 0 0 3px rgba(0, 0, 128, 0.1);
         }
 
         .submit-btn {
             width: 100%;
-            padding: 14px;
+            padding: 16px;
             border: none;
-            border-radius: 4px;
-            background: #000080;
+            border-radius: 6px;
+            background: var(--accent-h1);
             color: white;
-            font-size: 1rem;
+            font-size: 1.1rem;
             font-family: inherit;
-            font-weight: 600;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 1px;
             cursor: pointer;
-            box-shadow: 3px 3px 0 #444;
+            box-shadow: 4px 4px 0 #444;
             transition: all 0.1s ease;
-            margin-top: 0.5rem;
         }
 
         .submit-btn:hover:not(:disabled) {
             transform: translate(1px, 1px);
-            box-shadow: 2px 2px 0 #444;
+            box-shadow: 3px 3px 0 #444;
+            background: #0000a0;
         }
 
         .submit-btn:active:not(:disabled) {
-            transform: translate(2px, 2px);
+            transform: translate(3px, 3px);
             box-shadow: 1px 1px 0 #444;
-        }
-
-        .submit-btn:disabled {
-            background: #888;
-            cursor: not-allowed;
-            box-shadow: none;
         }
 
         .error-message {
             background: #ffe0e0;
             border: 2px solid #cc0000;
             color: #cc0000;
-            padding: 10px 14px;
+            padding: 12px;
             border-radius: 6px;
-            margin-bottom: 1rem;
-            font-size: 0.85rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
             font-weight: 600;
             display: none;
+            text-align: center;
         }
 
         .error-message.show {
             display: block;
         }
 
-        .email-status {
-            font-size: 0.8rem;
-            margin-top: 0.4rem;
-            font-weight: 600;
+        .footer-links {
+            margin-top: 2rem;
+            text-align: center;
         }
 
-        .email-status.checking {
+        .footer-links button {
+            background: none;
+            border: none;
             color: #666;
-        }
-
-        .email-status.found {
-            color: #228b22;
-        }
-
-        .email-status.not-found {
-            color: #cc0000;
-        }
-
-        .divider {
-            display: flex;
-            align-items: center;
-            margin: 1.5rem 0;
-            color: #888;
-            font-size: 0.85rem;
-        }
-
-        .divider::before,
-        .divider::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: #ccc;
-        }
-
-        .divider span {
-            padding: 0 1rem;
-        }
-
-        .guest-btn {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #888;
-            border-radius: 4px;
-            background: #e8e8e8;
-            color: #333;
-            font-size: 0.9rem;
             font-family: inherit;
-            font-weight: 600;
+            text-decoration: underline;
             cursor: pointer;
-            transition: all 0.1s ease;
+            font-size: 0.9rem;
         }
 
-        .guest-btn:hover {
-            background: #ddd;
-            border-color: #666;
-        }
-
-        #login-form,
-        #register-form {
-            display: none;
-        }
-
-        #login-form.active,
-        #register-form.active {
-            display: block;
-        }
-
-        .password-requirements {
-            font-size: 0.75rem;
-            color: #666;
-            margin-top: 0.4rem;
+        .footer-links button:hover {
+            color: #333;
         }
     </style>
 </head>
@@ -272,59 +166,28 @@
     <div class="auth-container">
         <div class="logo">
             <h1>💬 RoundChat</h1>
-            <p>Connect. Chat. Share.</p>
+            <p>Enter your email to start chatting</p>
         </div>
 
         <div class="auth-card">
-            <div class="tabs">
-                <button class="tab active" data-tab="login">Sign In</button>
-                <button class="tab" data-tab="register">Create Account</button>
-            </div>
-
             <div id="error-message" class="error-message"></div>
 
-            <!-- Login Form -->
-            <form id="login-form" class="active">
+            <form id="auth-form">
                 <div class="form-group">
-                    <label for="login-email">Email</label>
-                    <input type="email" id="login-email" placeholder="you@example.com" required>
-                    <p id="login-email-status" class="email-status"></p>
+                    <label for="email">Work or Personal Email</label>
+                    <input type="email" id="email" placeholder="you@example.com" required autocomplete="email"
+                        autofocus>
                 </div>
-                <div class="form-group">
-                    <label for="login-password">Password</label>
-                    <input type="password" id="login-password" placeholder="Enter password" required disabled>
-                    <p class="password-requirements" id="login-password-hint" style="display:none;">Enter password for
-                        this account</p>
-                </div>
-                <button type="submit" class="submit-btn" disabled>Sign In</button>
+                <button type="submit" class="submit-btn" id="submit-btn">Continue &rarr;</button>
             </form>
 
-            <!-- Register Form -->
-            <form id="register-form">
-                <div class="form-group">
-                    <label for="register-name">Display Name</label>
-                    <input type="text" id="register-name" placeholder="Your name" required>
-                </div>
-                <div class="form-group">
-                    <label for="register-email">Email</label>
-                    <input type="email" id="register-email" placeholder="you@example.com" required>
-                </div>
-                <div class="form-group">
-                    <label for="register-password">Password</label>
-                    <input type="password" id="register-password" placeholder="Create password" required minlength="6">
-                    <p class="password-requirements">At least 6 characters</p>
-                </div>
-                <button type="submit" class="submit-btn">Create Account</button>
-            </form>
-
-            <div class="divider"><span>or</span></div>
-
-            <button class="guest-btn" id="guest-btn">Continue as Guest</button>
+            <div class="footer-links">
+                <button id="guest-btn">Enter as Guest</button>
+            </div>
         </div>
     </div>
 
     <script>
-        // Check if already logged in
         const authToken = localStorage.getItem('authToken');
         if (authToken) {
             fetch('/auth/me', {
@@ -334,126 +197,37 @@
                 .catch(() => { });
         }
 
-        // Tab switching
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-
-                const formId = tab.dataset.tab + '-form';
-                document.querySelectorAll('form').forEach(f => f.classList.remove('active'));
-                document.getElementById(formId).classList.add('active');
-
-                hideError();
-            });
-        });
-
-        function showError(msg) {
+        const showError = (msg) => {
             const el = document.getElementById('error-message');
             el.textContent = msg;
             el.classList.add('show');
-        }
+        };
 
-        function hideError() {
+        const hideError = () => {
             document.getElementById('error-message').classList.remove('show');
-        }
+        };
 
-        // Email validation state
-        let emailCheckTimeout = null;
-        let emailExists = false;
-        let accountDisplayName = '';
-
-        // Real-time email validation for login
-        const loginEmailInput = document.getElementById('login-email');
-        const loginPasswordInput = document.getElementById('login-password');
-        const loginSubmitBtn = document.querySelector('#login-form .submit-btn');
-        const emailStatus = document.getElementById('login-email-status');
-        const passwordHint = document.getElementById('login-password-hint');
-
-        async function checkEmail(email) {
-            emailStatus.className = 'email-status checking';
-            emailStatus.textContent = 'Checking...';
-            loginEmailInput.classList.remove('valid', 'invalid');
-
-            try {
-                const res = await fetch(`/auth/check-email?email=${encodeURIComponent(email)}`);
-                const data = await res.json();
-
-                if (data.exists) {
-                    emailExists = true;
-                    accountDisplayName = data.displayName;
-                    emailStatus.className = 'email-status found';
-                    emailStatus.textContent = `✓ Welcome back, ${data.displayName}!`;
-                    loginEmailInput.classList.add('valid');
-                    loginPasswordInput.disabled = false;
-                    loginPasswordInput.focus();
-                    passwordHint.style.display = 'block';
-                    loginSubmitBtn.disabled = false;
-                } else {
-                    emailExists = false;
-                    emailStatus.className = 'email-status not-found';
-                    emailStatus.textContent = '✗ Account not found. Please register first.';
-                    loginEmailInput.classList.add('invalid');
-                    loginPasswordInput.disabled = true;
-                    loginPasswordInput.value = '';
-                    passwordHint.style.display = 'none';
-                    loginSubmitBtn.disabled = true;
-                }
-            } catch (e) {
-                emailStatus.className = 'email-status';
-                emailStatus.textContent = '';
-            }
-        }
-
-        loginEmailInput.addEventListener('input', () => {
-            if (emailCheckTimeout) clearTimeout(emailCheckTimeout);
-
-            const email = loginEmailInput.value.trim();
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-            if (!emailRegex.test(email)) {
-                emailStatus.className = 'email-status';
-                emailStatus.textContent = '';
-                loginEmailInput.classList.remove('valid', 'invalid');
-                loginPasswordInput.disabled = true;
-                loginSubmitBtn.disabled = true;
-                return;
-            }
-
-            emailCheckTimeout = setTimeout(() => checkEmail(email), 500);
-        });
-
-        loginEmailInput.addEventListener('blur', () => {
-            const email = loginEmailInput.value.trim();
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (emailRegex.test(email) && !emailExists) {
-                checkEmail(email);
-            }
-        });
-
-        // Login form
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
+        document.getElementById('auth-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             hideError();
 
-            const btn = e.target.querySelector('.submit-btn');
+            const email = document.getElementById('email').value.trim();
+            const btn = document.getElementById('submit-btn');
+
             btn.disabled = true;
-            btn.textContent = 'Signing in...';
+            btn.textContent = 'Connecting...';
 
             try {
                 const res = await fetch('/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        email: document.getElementById('login-email').value,
-                        password: document.getElementById('login-password').value
-                    })
+                    body: JSON.stringify({ email })
                 });
 
                 const data = await res.json();
 
                 if (!res.ok) {
-                    showError(data.error || 'Login failed');
+                    showError(data.error || 'Connection failed');
                     return;
                 }
 
@@ -461,52 +235,13 @@
                 localStorage.setItem('displayName', data.displayName);
                 window.location.href = '/chat.html';
             } catch (err) {
-                showError('Connection error. Please try again.');
+                showError('Network error. Check your connection.');
             } finally {
                 btn.disabled = false;
-                btn.textContent = 'Sign In';
+                btn.textContent = 'Continue →';
             }
         });
 
-        // Register form
-        document.getElementById('register-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            hideError();
-
-            const btn = e.target.querySelector('.submit-btn');
-            btn.disabled = true;
-            btn.textContent = 'Creating account...';
-
-            try {
-                const res = await fetch('/auth/register', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        displayName: document.getElementById('register-name').value,
-                        email: document.getElementById('register-email').value,
-                        password: document.getElementById('register-password').value
-                    })
-                });
-
-                const data = await res.json();
-
-                if (!res.ok) {
-                    showError(data.error || 'Registration failed');
-                    return;
-                }
-
-                localStorage.setItem('authToken', data.authToken);
-                localStorage.setItem('displayName', data.displayName);
-                window.location.href = '/chat.html';
-            } catch (err) {
-                showError('Connection error. Please try again.');
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'Create Account';
-            }
-        });
-
-        // Guest button
         document.getElementById('guest-btn').addEventListener('click', () => {
             localStorage.removeItem('authToken');
             localStorage.removeItem('displayName');

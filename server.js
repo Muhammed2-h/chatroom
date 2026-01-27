@@ -586,14 +586,10 @@ store.init().catch(e => {
 
 app.post('/auth/register', async (req, res) => {
     try {
-        const { email, password, displayName } = req.body;
+        const { email, displayName } = req.body;
 
-        if (!email || !password || !displayName) {
-            return res.status(400).json({ error: 'Email, password, and display name are required' });
-        }
-
-        if (password.length < 6) {
-            return res.status(400).json({ error: 'Password must be at least 6 characters' });
+        if (!email || !displayName) {
+            return res.status(400).json({ error: 'Email and display name are required' });
         }
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -601,7 +597,7 @@ app.post('/auth/register', async (req, res) => {
             return res.status(400).json({ error: 'Invalid email format' });
         }
 
-        const account = await store.createAccount(email.toLowerCase(), password, sanitize(displayName));
+        const account = await store.createAccount(email.toLowerCase(), '', sanitize(displayName));
 
         if (!account) {
             return res.status(409).json({ error: 'Email already registered' });
@@ -617,33 +613,29 @@ app.post('/auth/register', async (req, res) => {
 
 app.post('/auth/login', async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { email } = req.body;
 
-        if (!email || !password) {
-            return res.status(400).json({ error: 'Email and password are required' });
+        if (!email) {
+            return res.status(400).json({ error: 'Email is required' });
         }
 
-        let account = await store.getAccount(email.toLowerCase());
+        const lowerEmail = email.toLowerCase();
+        let account = await store.getAccount(lowerEmail);
 
-        // Admin credentials bypass
-        if (ADMIN_EMAIL && email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
-            if (password === ADMIN_PASSWORD) {
-                const authToken = await store.createSession(email.toLowerCase(), 'Administrator');
-                return res.json({ success: true, authToken, displayName: 'Administrator' });
-            } else {
-                return res.status(401).json({ error: 'Invalid credentials', code: 'WRONG_PASSWORD' });
-            }
+        // Administrator credentials bypass
+        if (ADMIN_EMAIL && lowerEmail === ADMIN_EMAIL.toLowerCase()) {
+            const authToken = await store.createSession(lowerEmail, 'Administrator');
+            return res.json({ success: true, authToken, displayName: 'Administrator' });
         }
 
         if (!account) {
-            return res.status(401).json({ error: 'Account not found. Please register first.', code: 'NOT_FOUND' });
+            // Auto-register for seamless connectivity
+            const autoName = email.split('@')[0];
+            account = await store.createAccount(lowerEmail, '', sanitize(autoName));
+            if (!account) return res.status(500).json({ error: 'Registration failed' });
         }
 
-        if (password !== account.password) {
-            return res.status(401).json({ error: 'Incorrect password', code: 'WRONG_PASSWORD' });
-        }
-
-        const authToken = await store.createSession(email.toLowerCase(), account.displayName);
+        const authToken = await store.createSession(lowerEmail, account.displayName);
         res.json({ success: true, authToken, displayName: account.displayName });
     } catch (e) {
         console.error('Login error:', e.message);
@@ -651,18 +643,7 @@ app.post('/auth/login', async (req, res) => {
     }
 });
 
-// Check if email exists (for real-time validation)
-app.get('/auth/check-email', async (req, res) => {
-    try {
-        const { email } = req.query;
-        if (!email) return res.json({ exists: false });
-
-        const account = await store.getAccount(email.toLowerCase());
-        res.json({ exists: !!account, displayName: account?.displayName });
-    } catch (e) {
-        res.status(500).json({ error: 'Server error' });
-    }
-});
+// Email existence check removed for seamless connectivity
 
 app.post('/auth/logout', async (req, res) => {
     const { authToken } = req.body;
