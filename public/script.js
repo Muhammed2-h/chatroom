@@ -171,7 +171,7 @@ const showChatInterface = () => {
 const initJoinMode = () => {
     isJoined = isPolling = false;
     Object.assign(els.mainInput, {
-        type: 'password', name: 'passkey', placeholder: 'Room Passkey',
+        type: 'password', name: 'passkey', placeholder: 'Room Passkey (Leave empty for Open Room)',
         disabled: false, value: ''
     });
 
@@ -608,7 +608,8 @@ els.form.addEventListener('submit', async (e) => {
 
     if (!nameVal) return;
     if (isJoined && !mainVal) return;
-    if (!isJoined && roomId !== 'world' && !mainVal) return;
+    // Allow empty passkey for creating/joining open rooms (except world which hides input)
+    // if (!isJoined && roomId !== 'world' && !mainVal) return; 
 
     els.actionBtn.disabled = true;
 
@@ -617,7 +618,7 @@ els.form.addEventListener('submit', async (e) => {
             const res = await fetch('/join', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ roomId, passkey: mainVal, username: nameVal })
+                body: JSON.stringify({ roomId, passkey: mainVal, username: nameVal, authToken })
             });
 
             if (res.ok) {

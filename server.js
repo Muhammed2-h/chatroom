@@ -557,7 +557,7 @@ app.get('/auth/me', async (req, res) => {
 
 app.post('/join', async (req, res) => {
     try {
-        const { passkey } = req.body;
+        const { passkey, authToken } = req.body; // Expect authToken
         const roomId = sanitize(req.body.roomId || '');
         const username = req.body.username ? sanitize(req.body.username) : null;
 
@@ -569,19 +569,51 @@ app.post('/join', async (req, res) => {
         const room = await store.getRoom(roomId);
         const token = crypto.randomUUID();
 
+        // Check Guest restrictions
+        let isLoggedIn = false;
+        if (authToken) {
+            const session = await store.getSession(authToken);
+            if (session) isLoggedIn = true;
+        }
+
         if (room) {
+            // Existing room logic
+            if (roomId !== 'world') {
+                // If room is PRIVATE (has passkey)
+                if (room.passkey) {
+                    // Check if Guest
+                    if (!isLoggedIn) {
+                        return res.status(403).json({ error: 'Guests cannot view private rooms. Please log in.' });
+                    }
+                    // Validate passkey
+                    if (room.passkey !== passkey) {
+                        return res.status(403).json({ error: 'Invalid passkey' });
+                    }
+                } else {
+                    // Open room (no passkey) - Guests allowed
+                    // No passkey check needed
+                }
+            }
+
             if (!username) return res.status(400).json({ error: 'Username required' });
             if (!await store.checkUsername(roomId, username)) {
                 return res.status(409).json({ error: 'Username taken' });
             }
             await store.setUser(roomId, username, token, false);
-            if (roomId === 'world') return res.json({ success: true, status: 'joined', token });
-            if (room.passkey !== passkey) return res.status(403).json({ error: 'Invalid passkey' });
             return res.json({ success: true, status: 'joined', token });
         }
 
-        if (!passkey) return res.status(403).json({ error: 'Passkey required' });
-        await store.createRoom(roomId, passkey);
+        // Creating New Room
+        // If creating a private room (passkey provided), must be logged in?
+        // User requirements: "in the guest mode users cannot view the private room"
+        // Implies they probably shouldn't CREATE one either if they can't view it.
+
+        if (passkey && !isLoggedIn) {
+            return res.status(403).json({ error: 'Guests cannot create private rooms. Please log in.' });
+        }
+
+        // Allow creating room (Private if passkey, Open if no passkey)
+        await store.createRoom(roomId, passkey || ''); // Treat null/undefined as empty string (Open)
         if (username) await store.setUser(roomId, username, token, true);
         res.json({ success: true, status: 'created', token, isAdmin: true });
     } catch (e) {
