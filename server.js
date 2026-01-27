@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const crypto = require('crypto');
+const bcrypt = require('bcrypt');
 const sanitizeHtml = require('sanitize-html');
 const { Pool } = require('pg');
 
@@ -9,6 +10,7 @@ const PORT = process.env.PORT || 3000;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'QWERTY';
 const USER_TIMEOUT = 15000;
 const MAX_MESSAGES = 50;
+const SALT_ROUNDS = 10;
 
 // Health check endpoint (must be first)
 app.get('/up', (_, res) => res.send('OK'));
@@ -25,10 +27,45 @@ const sanitize = text => sanitizeHtml(text, { allowedTags: [] });
 class MemoryStore {
     constructor() {
         this.rooms = { world: { passkey: null, messages: [], users: {}, bans: new Set() } };
+        this.accounts = {}; // email -> { password, displayName, createdAt }
+        this.sessions = {}; // authToken -> { email, displayName, expiresAt }
     }
 
     async init() { console.log('💾 Storage: In-Memory'); }
 
+    // Auth methods
+    async createAccount(email, hashedPassword, displayName) {
+        if (this.accounts[email]) return null;
+        this.accounts[email] = { password: hashedPassword, displayName, createdAt: Date.now() };
+        return { email, displayName };
+    }
+
+    async getAccount(email) {
+        return this.accounts[email] || null;
+    }
+
+    async createSession(email, displayName) {
+        const token = crypto.randomUUID();
+        const expiresAt = Date.now() + (7 * 24 * 60 * 60 * 1000); // 7 days
+        this.sessions[token] = { email, displayName, expiresAt };
+        return token;
+    }
+
+    async getSession(token) {
+        const session = this.sessions[token];
+        if (!session) return null;
+        if (session.expiresAt < Date.now()) {
+            delete this.sessions[token];
+            return null;
+        }
+        return session;
+    }
+
+    async deleteSession(token) {
+        delete this.sessions[token];
+    }
+
+    // Room methods
     async getRoom(id) { return this.rooms[id] || null; }
 
     async createRoom(id, passkey) {
@@ -119,9 +156,12 @@ class PostgresStore {
                         CREATE TABLE IF NOT EXISTS messages (id SERIAL PRIMARY KEY, room_id TEXT REFERENCES rooms(id), name TEXT, content TEXT, created_at BIGINT);
                         CREATE TABLE IF NOT EXISTS room_users (room_id TEXT REFERENCES rooms(id), name TEXT, last_seen BIGINT, PRIMARY KEY (room_id, name));
                         CREATE TABLE IF NOT EXISTS bans (room_id TEXT REFERENCES rooms(id), name TEXT, PRIMARY KEY (room_id, name));
+                        CREATE TABLE IF NOT EXISTS accounts (email TEXT PRIMARY KEY, password TEXT NOT NULL, display_name TEXT NOT NULL, created_at BIGINT);
+                        CREATE TABLE IF NOT EXISTS sessions (token TEXT PRIMARY KEY, email TEXT REFERENCES accounts(email), display_name TEXT, expires_at BIGINT);
                         INSERT INTO rooms (id, passkey) VALUES ('world', NULL) ON CONFLICT DO NOTHING;
                         CREATE INDEX IF NOT EXISTS idx_msg_room ON messages(room_id);
                         CREATE INDEX IF NOT EXISTS idx_users_room ON room_users(room_id);
+                        CREATE INDEX IF NOT EXISTS idx_sessions_email ON sessions(email);
                     `);
                     await client.query(`
                         DO $$ BEGIN
@@ -144,6 +184,51 @@ class PostgresStore {
         throw new Error('Database connection failed');
     }
 
+    // Auth methods
+    async createAccount(email, hashedPassword, displayName) {
+        try {
+            await this.pool.query(
+                'INSERT INTO accounts (email, password, display_name, created_at) VALUES ($1, $2, $3, $4)',
+                [email, hashedPassword, displayName, Date.now()]
+            );
+            return { email, displayName };
+        } catch (e) {
+            if (e.code === '23505') return null; // Duplicate
+            throw e;
+        }
+    }
+
+    async getAccount(email) {
+        const r = await this.pool.query('SELECT * FROM accounts WHERE email=$1', [email]);
+        return r.rows[0] ? { ...r.rows[0], displayName: r.rows[0].display_name } : null;
+    }
+
+    async createSession(email, displayName) {
+        const token = crypto.randomUUID();
+        const expiresAt = Date.now() + (7 * 24 * 60 * 60 * 1000);
+        await this.pool.query(
+            'INSERT INTO sessions (token, email, display_name, expires_at) VALUES ($1, $2, $3, $4)',
+            [token, email, displayName, expiresAt]
+        );
+        return token;
+    }
+
+    async getSession(token) {
+        const r = await this.pool.query('SELECT * FROM sessions WHERE token=$1', [token]);
+        if (!r.rows[0]) return null;
+        const session = r.rows[0];
+        if (session.expires_at < Date.now()) {
+            await this.deleteSession(token);
+            return null;
+        }
+        return { email: session.email, displayName: session.display_name, expiresAt: session.expires_at };
+    }
+
+    async deleteSession(token) {
+        await this.pool.query('DELETE FROM sessions WHERE token=$1', [token]);
+    }
+
+    // Room methods
     async getRoom(id) {
         const r = await this.pool.query('SELECT * FROM rooms WHERE id=$1', [id]);
         return r.rows[0] || null;
@@ -234,7 +319,83 @@ store.init().catch(e => {
     store.init();
 });
 
-// --- Routes ---
+// --- Auth Routes ---
+
+app.post('/auth/register', async (req, res) => {
+    try {
+        const { email, password, displayName } = req.body;
+
+        if (!email || !password || !displayName) {
+            return res.status(400).json({ error: 'Email, password, and display name are required' });
+        }
+
+        if (password.length < 6) {
+            return res.status(400).json({ error: 'Password must be at least 6 characters' });
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ error: 'Invalid email format' });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+        const account = await store.createAccount(email.toLowerCase(), hashedPassword, sanitize(displayName));
+
+        if (!account) {
+            return res.status(409).json({ error: 'Email already registered' });
+        }
+
+        const authToken = await store.createSession(email.toLowerCase(), account.displayName);
+        res.json({ success: true, authToken, displayName: account.displayName });
+    } catch (e) {
+        console.error('Register error:', e.message);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+app.post('/auth/login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        if (!email || !password) {
+            return res.status(400).json({ error: 'Email and password are required' });
+        }
+
+        const account = await store.getAccount(email.toLowerCase());
+        if (!account) {
+            return res.status(401).json({ error: 'Invalid email or password' });
+        }
+
+        const valid = await bcrypt.compare(password, account.password);
+        if (!valid) {
+            return res.status(401).json({ error: 'Invalid email or password' });
+        }
+
+        const authToken = await store.createSession(email.toLowerCase(), account.displayName);
+        res.json({ success: true, authToken, displayName: account.displayName });
+    } catch (e) {
+        console.error('Login error:', e.message);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+app.post('/auth/logout', async (req, res) => {
+    const { authToken } = req.body;
+    if (authToken) await store.deleteSession(authToken);
+    res.json({ success: true });
+});
+
+app.get('/auth/me', async (req, res) => {
+    const authToken = req.headers.authorization?.replace('Bearer ', '');
+    if (!authToken) return res.status(401).json({ error: 'Not authenticated' });
+
+    const session = await store.getSession(authToken);
+    if (!session) return res.status(401).json({ error: 'Session expired' });
+
+    res.json({ email: session.email, displayName: session.displayName });
+});
+
+// --- Chat Routes ---
 
 app.post('/join', async (req, res) => {
     try {
@@ -305,7 +466,6 @@ app.post('/send', async (req, res) => {
 
         // Handle commands
         if (content.startsWith('/')) {
-            // Admin login
             if (content.match(/^\/admin\s+(.+)$/)?.[1] === ADMIN_PASSWORD) {
                 await store.setAdmin(roomId, name, true);
                 return res.json({ success: true, system: 'You are now an admin' });
@@ -347,7 +507,6 @@ app.post('/send', async (req, res) => {
             }
         }
 
-        // Duplicate check
         const msgs = await store.getMessages(roomId);
         const last = msgs[msgs.length - 1];
         const now = Math.floor(Date.now() / 1000);

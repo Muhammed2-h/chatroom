@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset=utf-8>
+	<meta name=viewport content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+	<title>RoundChat</title>
+	<style>
+		:root {
+			--bg-color: #f0f0eb;
+			/* Beige-ish classic */
+			--chat-bg: #fff;
+			--primary-color: #555;
+			--text-color: #2b2b2b;
+			--border-color: #888;
+			--accent-h1: #000080;
+			--accent-ui: #e8e8e8;
+		}
+
+		html {
+			margin: 0;
+			padding: 0;
+			height: 100%;
+		}
+
+		body {
+			height: 100vh;
+			height: -webkit-fill-available;
+			box-sizing: border-box;
+			margin: 0;
+			padding: 1.5em;
+			/* Breathing room */
+			font-family: 'Geneva', 'Verdana', sans-serif;
+			/* Cleaner sans-serif retro */
+			font-size: 15px;
+			color: var(--text-color);
+			display: flex;
+			flex-direction: column;
+			background: var(--bg-color);
+			gap: 0.8em;
+		}
+
+		/* Modern Retro Buttons */
+		button {
+			background: #e0e0e0;
+			border: 1px solid #999;
+			border-bottom: 2px solid #555;
+			border-right: 2px solid #555;
+			border-radius: 4px;
+			/* Slight roundness */
+			color: #333;
+			font-family: inherit;
+			font-weight: 600;
+			cursor: pointer;
+			transition: all 0.1s ease;
+			text-transform: uppercase;
+			letter-spacing: 0.5px;
+			font-size: 0.8em;
+		}
+
+		button:active {
+			border: 1px solid #999;
+			transform: translate(1px, 1px);
+			background: #ccc;
+		}
+
+		/* Center container for Room Input */
+		#room-selection {
+			flex: 1;
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+			align-items: center;
+			gap: 1.5em;
+		}
+
+		#room-selection h1 {
+			font-family: 'Courier New', monospace;
+			color: #444;
+			text-shadow: 2px 2px 0 #ccc;
+		}
+
+		#room-selection input {
+			width: 100%;
+			max-width: 320px;
+			padding: 1em;
+			border: 2px solid #555;
+			border-radius: 6px;
+			background: #fff;
+			box-shadow: 4px 4px 0 #ccc;
+			/* Pop shadow */
+		}
+
+		#room-selection button {
+			padding: 0.8em 2.5em;
+			font-size: 1em;
+			background: #000080;
+			color: #fff;
+			border: none;
+			box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.3);
+		}
+
+		#room-selection button:active {
+			box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.3);
+			transform: translate(2px, 2px);
+		}
+
+		/* Main Chat UI */
+		#chat-interface {
+			display: none;
+			flex: 1;
+			flex-direction: column;
+			height: 100%;
+			gap: 0.8em;
+			max-width: 800px;
+			margin: 0 auto;
+			width: 100%;
+		}
+
+		header {
+			flex: 0 0 auto;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			flex-wrap: wrap;
+			background: #fff;
+			color: #333;
+			padding: 0.8em 1em;
+			border: 2px solid #333;
+			border-radius: 8px;
+			box-shadow: 4px 4px 0 #ccc;
+		}
+
+		h1 {
+			margin: 0;
+			font-size: 1.25em;
+			flex-grow: 1;
+			font-family: 'Courier New', monospace;
+			font-weight: 700;
+			color: var(--accent-h1);
+		}
+
+		.room-info {
+			font-size: 0.9em;
+			display: flex;
+			flex-direction: row;
+			align-items: center;
+			gap: 1em;
+		}
+
+		.room-info span {
+			color: #555;
+			background: #eee;
+			padding: 2px 5px;
+			border-radius: 4px;
+			font-family: monospace;
+		}
+
+		#passkey-display {
+			font-size: 0.9em;
+		}
+
+		.controls {
+			display: flex;
+			gap: 0.5em;
+			align-items: center;
+		}
+
+		button.small-btn {
+			padding: 4px 8px;
+			font-size: 0.7em;
+			border-radius: 3px;
+		}
+
+		button.logout-btn {
+			background: #ffe0e0;
+			border-color: #ffcccc;
+			color: #d00;
+		}
+
+		#online-users {
+			flex: 0 0 auto;
+			font-size: 0.85em;
+			color: #444;
+			white-space: nowrap;
+			overflow-x: auto;
+			padding: 6px 10px;
+			min-height: 1.4em;
+			background: transparent;
+		}
+
+		#online-users span {
+			display: inline-block;
+			margin-right: 0.8em;
+			color: #000080;
+			font-weight: bold;
+		}
+
+		ul#messages {
+			flex: 1 1 auto;
+			overflow-y: auto;
+			margin: 0;
+			padding: 1em;
+			list-style: none;
+			background: #fff;
+			border: 2px solid #333;
+			border-radius: 8px;
+			box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.05);
+			/* Soft inner shadow */
+			display: flex;
+			flex-direction: column;
+			color: #222;
+		}
+
+		ul#messages li {
+			margin: 0.4em 0;
+			padding: 0;
+			word-wrap: break-word;
+			line-height: 1.4;
+		}
+
+		ul#messages li small {
+			display: inline-block;
+			font-size: 0.85em;
+			color: #000080;
+			margin-right: 0.5em;
+			font-family: monospace;
+			/* Mix serif/mono */
+		}
+
+		ul#messages li.pending {
+			opacity: 0.5;
+		}
+
+		form {
+			flex: 0 0 auto;
+			margin: 0;
+			padding: 0;
+		}
+
+		form p {
+			margin: 0;
+			padding: 0;
+			display: flex;
+			gap: 0.6em;
+		}
+
+		input {
+			padding: 0.8em;
+			border: 2px solid #555;
+			background: #fff;
+			border-radius: 6px;
+			font-size: 1rem;
+			font-family: inherit;
+			transition: border-color 0.2s;
+		}
+
+		input:focus {
+			outline: none;
+			border-color: #000080;
+		}
+
+		form p input {
+			min-width: 0;
+		}
+
+		form p input[name=name] {
+			flex: 0 0 25%;
+			max-width: 130px;
+		}
+
+		form p input[name=content],
+		form p input.passkey-input {
+			flex: 1 1 auto;
+		}
+
+		button#action-btn {
+			padding: 0 1.5em;
+			background: #000080;
+			color: white;
+			border: none;
+			box-shadow: 3px 3px 0 #444;
+		}
+
+		button#action-btn:active {
+			box-shadow: 1px 1px 0 #444;
+			transform: translate(2px, 2px);
+		}
+
+		button#action-btn:disabled {
+			background: #777;
+			box-shadow: none;
+			transform: none;
+		}
+
+		.sound-toggle {
+			font-size: 0.8em;
+			display: flex;
+			align-items: center;
+			gap: 4px;
+			cursor: pointer;
+			color: #555;
+		}
+
+		#form-status {
+			font-size: 0.85em;
+			color: #d00;
+			font-weight: bold;
+			padding-bottom: 4px;
+			min-height: 1.2em;
+		}
+
+		@media (min-width: 768px) {
+
+			h1,
+			ul#messages,
+			form,
+			header,
+			#online-users {
+				/* Handled by chat-interface max-width */
+			}
+		}
+	</style>
+
+	<style>
+		.user-bar {
+			position: fixed;
+			top: 0;
+			left: 0;
+			right: 0;
+			background: rgba(0, 0, 0, 0.85);
+			color: white;
+			padding: 10px 16px;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			font-size: 0.9em;
+			z-index: 1000;
+		}
+
+		.user-bar .user-info {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+		}
+
+		.user-bar .user-name {
+			font-weight: 600;
+		}
+
+		.user-bar .guest-badge {
+			background: #666;
+			padding: 2px 8px;
+			border-radius: 12px;
+			font-size: 0.75em;
+		}
+
+		.user-bar .logged-in-badge {
+			background: #22c55e;
+			padding: 2px 8px;
+			border-radius: 12px;
+			font-size: 0.75em;
+			display: none;
+		}
+
+		.user-bar button {
+			background: #4f46e5;
+			border: none;
+			color: white;
+			padding: 6px 14px;
+			border-radius: 6px;
+			cursor: pointer;
+			font-size: 0.85em;
+			transition: background 0.2s;
+			text-transform: none;
+		}
+
+		.user-bar button:hover {
+			background: #6366f1;
+		}
+
+		body {
+			padding-top: 50px !important;
+		}
+	</style>
+
+	<!-- User Bar -->
+	<div class="user-bar" id="user-bar">
+		<div class="user-info">
+			<span>👤</span>
+			<span class="user-name" id="user-display-name">Guest</span>
+			<span class="guest-badge" id="guest-badge">Guest</span>
+			<span class="logged-in-badge" id="logged-in-badge">✓ Logged In</span>
+		</div>
+		<button id="signout-btn">Sign Out</button>
+	</div>
+
+	<!-- Initial Room Selection Screen -->
+	<div id="room-selection">
+		<h1 style="font-family:'Courier New'; color:#444; text-shadow: 2px 2px 0 #ccc; margin-bottom: 0.5em;">💬
+			RoundChat</h1>
+		<button id="world-chat-btn" style="background:#0066cc; width:100%; max-width:320px; font-size:1.1em;">🌎 Enter
+			World
+			Chat</button>
+
+		<div style="display:flex; align-items:center; gap:10px; width:100%; max-width:320px; margin: 10px 0;">
+			<hr style="flex:1; border:0; border-top:1px solid #aaa;">
+			<span style="color:#666; font-size:0.9em;">OR</span>
+			<hr style="flex:1; border:0; border-top:1px solid #aaa;">
+		</div>
+
+		<h2 style="font-family:'Courier New'; color:#444; font-size:1.1em; margin:0;">Create / Join Room</h2>
+		<input type="text" id="initial-room-input" placeholder="Room Name" autofocus>
+		<button id="set-room-btn">Next</button>
+	</div>
+
+	<!-- Main Chat Interface -->
+	<div id="chat-interface">
+		<header>
+			<h1 id="header-title">Simple Chat</h1>
+
+			<div id="room-controls" class="room-info" style="display: none;">
+				<div class="controls">
+					<label class="sound-toggle">
+						<input type="checkbox" id="sound-toggle" checked> 🔊
+					</label>
+					<button class="small-btn" id="clear-btn">Clear Chat</button>
+					<button class="small-btn logout-btn" id="logout-btn">Exit Room</button>
+				</div>
+				<div id="passkey-display" style="margin-top:4px;">🔑 <span id="pk-val">***</span></div>
+			</div>
+		</header>
+
+		<div id="online-users">
+			<!-- J.Doe, M.Smith... -->
+		</div>
+
+		<!-- Messages List -->
+		<ul id=messages>
+			<li id="status-message">Please join the room...</li>
+			<template>
+				<li class=pending>
+					<small>…</small>
+					<span>…</span>
+				</li>
+			</template>
+		</ul>
+
+		<!-- Form -->
+		<form id="chat-form">
+			<div id="form-status"></div>
+			<p>
+				<input type=text name=name placeholder="Name" value="" required autocomplete="username">
+				<input type=text id="main-input" name=content placeholder="Message" disabled autocomplete="off">
+				<button id="action-btn">Join</button>
+			</p>
+		</form>
+	</div>
+
+	<script type="module" src="script.js"></script>
