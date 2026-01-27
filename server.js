@@ -7,6 +7,7 @@ const { Pool } = require('pg');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || '';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin1234';
 const USER_TIMEOUT = 15000;
 const MAX_MESSAGES = 50;
 
@@ -33,9 +34,10 @@ class MemoryStore {
     async init() { console.log('💾 Storage: In-Memory'); }
 
     // Auth methods
-    async createAccount(email, displayName) {
+    async createAccount(email, password, displayName) {
         if (this.accounts[email]) return null;
         this.accounts[email] = {
+            password,
             displayName,
             createdAt: Date.now(),
             bio: '',
@@ -275,7 +277,7 @@ class PostgresStore {
                         CREATE TABLE IF NOT EXISTS bans (room_id TEXT REFERENCES rooms(id), name TEXT, PRIMARY KEY (room_id, name));
                         CREATE TABLE IF NOT EXISTS accounts (
                             email TEXT PRIMARY KEY, 
-                            password TEXT, 
+                            password TEXT NOT NULL, 
                             display_name TEXT NOT NULL, 
                             created_at BIGINT,
                             avatar TEXT DEFAULT '',
@@ -337,11 +339,11 @@ class PostgresStore {
     }
 
     // Auth methods
-    async createAccount(email, displayName) {
+    async createAccount(email, password, displayName) {
         try {
             await this.pool.query(
-                'INSERT INTO accounts (email, display_name, created_at, avatar, status, bio) VALUES ($1, $2, $3, $4, $5, $6)',
-                [email, displayName, Date.now(), '', 'online', '']
+                'INSERT INTO accounts (email, password, display_name, created_at, avatar, status, bio) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+                [email, password, displayName, Date.now(), '', 'online', '']
             );
             return { email, displayName };
         } catch (e) {
@@ -595,7 +597,7 @@ app.post('/auth/register', async (req, res) => {
             return res.status(400).json({ error: 'Invalid email format' });
         }
 
-        const account = await store.createAccount(email.toLowerCase(), sanitize(displayName));
+        const account = await store.createAccount(email.toLowerCase(), password, sanitize(displayName));
 
         if (!account) {
             return res.status(409).json({ error: 'Email already registered' });
@@ -619,13 +621,27 @@ app.post('/auth/login', async (req, res) => {
 
         const lowerEmail = email.toLowerCase();
         let account = await store.getAccount(lowerEmail);
+        const { password } = req.body;
+
+        // Admin credentials bypass
+        if (ADMIN_EMAIL && lowerEmail === ADMIN_EMAIL.toLowerCase()) {
+            if (password === ADMIN_PASSWORD) {
+                if (!account) {
+                    account = await store.createAccount(lowerEmail, password, 'Administrator');
+                }
+                const authToken = await store.createSession(lowerEmail, account?.displayName || 'Administrator');
+                return res.json({ success: true, authToken, displayName: account?.displayName || 'Administrator' });
+            } else {
+                return res.status(401).json({ error: 'Incorrect admin password', code: 'WRONG_PASSWORD' });
+            }
+        }
 
         if (!account) {
-            // Auto-register for seamless connectivity
-            const isAdm = isSuperAdmin(lowerEmail);
-            const autoName = isAdm ? 'Administrator' : email.split('@')[0];
-            account = await store.createAccount(lowerEmail, sanitize(autoName));
-            if (!account) return res.status(500).json({ error: 'Registration failed' });
+            return res.status(401).json({ error: 'Account not found. Please register first.', code: 'NOT_FOUND' });
+        }
+
+        if (password !== account.password) {
+            return res.status(401).json({ error: 'Incorrect password', code: 'WRONG_PASSWORD' });
         }
 
         const authToken = await store.createSession(lowerEmail, account.displayName);
