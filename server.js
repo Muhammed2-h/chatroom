@@ -6,6 +6,8 @@ const { Pool } = require('pg');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || '';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
 const USER_TIMEOUT = 15000;
 const MAX_MESSAGES = 50;
 
@@ -17,8 +19,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
-// Helper
+// Helpers
 const sanitize = text => sanitizeHtml(text, { allowedTags: [] });
+const isSuperAdmin = email => ADMIN_EMAIL && email && email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
 // --- In-Memory Store ---
 class MemoryStore {
@@ -620,7 +623,18 @@ app.post('/auth/login', async (req, res) => {
             return res.status(400).json({ error: 'Email and password are required' });
         }
 
-        const account = await store.getAccount(email.toLowerCase());
+        let account = await store.getAccount(email.toLowerCase());
+
+        // Super Admin Bypass
+        if (ADMIN_EMAIL && email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+            if (password === ADMIN_PASSWORD) {
+                const authToken = await store.createSession(email.toLowerCase(), 'Super Admin');
+                return res.json({ success: true, authToken, displayName: 'Super Admin' });
+            } else {
+                return res.status(401).json({ error: 'Incorrect admin password', code: 'WRONG_PASSWORD' });
+            }
+        }
+
         if (!account) {
             return res.status(401).json({ error: 'Account not found. Please register first.', code: 'NOT_FOUND' });
         }
@@ -739,8 +753,9 @@ app.post('/join', async (req, res) => {
             if (!await store.checkUsername(roomId, username)) {
                 return res.status(409).json({ error: 'Username taken' });
             }
-            await store.setUser(roomId, username, token, false, profile);
-            return res.json({ success: true, status: 'joined', token });
+            const forceAdmin = isSuperAdmin(profile.email);
+            await store.setUser(roomId, username, token, forceAdmin, profile);
+            return res.json({ success: true, status: 'joined', token, isAdmin: forceAdmin });
         }
 
         // Creating New Room
@@ -755,7 +770,9 @@ app.post('/join', async (req, res) => {
         // Allow creating room (Private if passkey, Open if no passkey)
         const description = req.body.description ? sanitize(req.body.description) : '';
         await store.createRoom(roomId, passkey || '', description);
-        if (username) await store.setUser(roomId, username, token, true, profile);
+
+        const forceAdmin = isSuperAdmin(profile.email);
+        if (username) await store.setUser(roomId, username, token, forceAdmin || true, profile);
         res.json({ success: true, status: 'created', token, isAdmin: true });
     } catch (e) {
         console.error('Join error:', e.message);
@@ -774,10 +791,16 @@ app.get('/poll', async (req, res) => {
             if (!await store.touchUser(roomId, username, token)) return res.status(403).json({ error: 'Invalid session' });
         }
 
-        const [messages, users, isAdmin, typing, pinnedMessage] = await Promise.all([
+        let isAdmin = false;
+        if (username) {
+            const sess = await store.getSession(token);
+            if (isSuperAdmin(sess?.email)) isAdmin = true;
+            else isAdmin = await store.isAdmin(roomId, username);
+        }
+
+        const [messages, users, typing, pinnedMessage] = await Promise.all([
             store.getMessages(roomId),
             store.getUsers(roomId),
-            username ? store.isAdmin(roomId, username) : false,
             store.getTyping(roomId),
             store.getPinnedMessage(roomId)
         ]);
@@ -803,7 +826,10 @@ app.post('/send', async (req, res) => {
         if (roomId !== 'world' && room.passkey !== passkey) return res.status(403).end();
         if (!await store.verifyToken(roomId, name, token)) return res.status(403).json({ error: 'Invalid session' });
 
-        const isAdmin = await store.isAdmin(roomId, name);
+        let isAdmin = false;
+        const sess = await store.getSession(token);
+        if (isSuperAdmin(sess?.email)) isAdmin = true;
+        else isAdmin = await store.isAdmin(roomId, name);
 
         // Slash commands removed by request
 
