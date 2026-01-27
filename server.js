@@ -1,7 +1,6 @@
 require('dotenv').config();
 const express = require('express');
 const crypto = require('crypto');
-const bcrypt = require('bcrypt');
 const sanitizeHtml = require('sanitize-html');
 const { Pool } = require('pg');
 
@@ -10,7 +9,6 @@ const PORT = process.env.PORT || 3000;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'QWERTY';
 const USER_TIMEOUT = 15000;
 const MAX_MESSAGES = 50;
-const SALT_ROUNDS = 10;
 
 // Health check endpoint (must be first)
 app.get('/up', (_, res) => res.send('OK'));
@@ -338,8 +336,7 @@ app.post('/auth/register', async (req, res) => {
             return res.status(400).json({ error: 'Invalid email format' });
         }
 
-        const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
-        const account = await store.createAccount(email.toLowerCase(), hashedPassword, sanitize(displayName));
+        const account = await store.createAccount(email.toLowerCase(), password, sanitize(displayName));
 
         if (!account) {
             return res.status(409).json({ error: 'Email already registered' });
@@ -366,8 +363,7 @@ app.post('/auth/login', async (req, res) => {
             return res.status(401).json({ error: 'Account not found. Please register first.', code: 'NOT_FOUND' });
         }
 
-        const valid = await bcrypt.compare(password, account.password);
-        if (!valid) {
+        if (password !== account.password) {
             return res.status(401).json({ error: 'Incorrect password', code: 'WRONG_PASSWORD' });
         }
 
