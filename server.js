@@ -6,7 +6,6 @@ const { Pool } = require('pg');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'QWERTY';
 const USER_TIMEOUT = 15000;
 const MAX_MESSAGES = 50;
 
@@ -192,10 +191,6 @@ class MemoryStore {
 
     async clearMessages(id) { if (this.rooms[id]) this.rooms[id].messages = []; }
 
-    async deleteMessage(id, content) {
-        if (this.rooms[id]) this.rooms[id].messages = this.rooms[id].messages.filter(m => m.content !== content);
-    }
-
     async getUsers(id) {
         const room = this.rooms[id];
         if (!room) return [];
@@ -230,10 +225,6 @@ class MemoryStore {
         }
     }
 
-    async setAdmin(id, name, isAdmin = true) {
-        if (this.rooms[id]?.users[name]) this.rooms[id].users[name].isAdmin = isAdmin;
-    }
-
     async isAdmin(id, name) { return !!this.rooms[id]?.users[name]?.isAdmin; }
 
     async checkUsername(id, name) {
@@ -243,17 +234,7 @@ class MemoryStore {
 
     async verifyToken(id, name, token) { return this.rooms[id]?.users[name]?.token === token; }
 
-    async removeUser(id, name) { if (this.rooms[id]) delete this.rooms[id].users[name]; }
-
     async isBanned(id, name) { return this.rooms[id]?.bans?.has(name) || false; }
-
-    async banUser(id, name) { this.rooms[id]?.bans?.add(name); }
-
-    async getBannedUsers(id) { return Array.from(this.rooms[id]?.bans || []); }
-
-    async unbanUser(id, name) { this.rooms[id]?.bans?.delete(name); }
-
-    async unbanAll(id) { if (this.rooms[id]) this.rooms[id].bans = new Set(); }
 }
 
 // --- PostgreSQL Store ---
@@ -467,8 +448,6 @@ class PostgresStore {
 
     async clearMessages(id) { await this.pool.query('DELETE FROM messages WHERE room_id=$1', [id]); }
 
-    async deleteMessage(id, content) { await this.pool.query('DELETE FROM messages WHERE room_id=$1 AND content=$2', [id, content]); }
-
     async getUsers(id) {
         const threshold = Date.now() - USER_TIMEOUT;
         await this.pool.query('DELETE FROM room_users WHERE room_id=$1 AND last_seen<$2', [id, threshold]);
@@ -486,10 +465,6 @@ class PostgresStore {
             'INSERT INTO room_users (room_id,name,last_seen,session_token,is_admin,avatar,status,bio,email) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT (room_id,name) DO UPDATE SET last_seen=$3,session_token=$4,is_admin=$5,avatar=$6,status=$7,bio=$8,email=$9',
             [id, name, Date.now(), token, isAdmin, profile.avatar || '', profile.status || 'online', profile.bio || '', profile.email || null]
         );
-    }
-
-    async setAdmin(id, name, isAdmin = true) {
-        await this.pool.query('UPDATE room_users SET is_admin=$3 WHERE room_id=$1 AND name=$2', [id, name, isAdmin]);
     }
 
     async isAdmin(id, name) {
@@ -513,20 +488,6 @@ class PostgresStore {
         const r = await this.pool.query('SELECT 1 FROM bans WHERE room_id=$1 AND name=$2', [id, name]);
         return r.rows.length > 0;
     }
-
-    async banUser(id, name) {
-        await this.pool.query('INSERT INTO bans (room_id,name) VALUES ($1,$2) ON CONFLICT DO NOTHING', [id, name]);
-        await this.removeUser(id, name);
-    }
-
-    async getBannedUsers(id) {
-        const r = await this.pool.query('SELECT name FROM bans WHERE room_id=$1', [id]);
-        return r.rows.map(x => x.name);
-    }
-
-    async unbanUser(id, name) { await this.pool.query('DELETE FROM bans WHERE room_id=$1 AND name=$2', [id, name]); }
-
-    async unbanAll(id) { await this.pool.query('DELETE FROM bans WHERE room_id=$1', [id]); }
 
     // In-memory typing cache (too real-time for DB)
     typingCache = {};
@@ -844,48 +805,7 @@ app.post('/send', async (req, res) => {
 
         const isAdmin = await store.isAdmin(roomId, name);
 
-        // Handle commands
-        if (content.startsWith('/')) {
-            if (content.match(/^\/admin\s+(.+)$/)?.[1] === ADMIN_PASSWORD) {
-                await store.setAdmin(roomId, name, true);
-                return res.json({ success: true, system: 'You are now an admin' });
-            }
-
-            if (isAdmin) {
-                if (content === '/clearchat') {
-                    await store.clearMessages(roomId);
-                    return res.json({ success: true, system: 'Chat cleared' });
-                }
-
-                const delMatch = content.match(/^\/delete\s+(.+)$/);
-                if (delMatch) {
-                    await store.deleteMessage(roomId, delMatch[1].replace(/^"(.*)"$/, '$1'));
-                    return res.json({ success: true, system: 'Message deleted' });
-                }
-
-                const banMatch = content.match(/^\/ban\s+(.+)$/);
-                if (banMatch) {
-                    const arg = banMatch[1].replace(/^"(.*)"$/, '$1').toLowerCase();
-                    if (arg === 'users' || arg === 'list') {
-                        const banned = await store.getBannedUsers(roomId);
-                        return res.json({ success: true, system: banned.length ? `Banned: ${banned.join(', ')}` : 'No bans' });
-                    }
-                    await store.banUser(roomId, banMatch[1].replace(/^"(.*)"$/, '$1'));
-                    return res.json({ success: true, system: 'User banned' });
-                }
-
-                const unbanMatch = content.match(/^\/unban\s+(.+)$/);
-                if (unbanMatch) {
-                    const arg = unbanMatch[1].replace(/^"(.*)"$/, '$1');
-                    if (arg.toLowerCase() === 'all') {
-                        await store.unbanAll(roomId);
-                        return res.json({ success: true, system: 'All unbanned' });
-                    }
-                    for (const u of arg.split(',').map(s => s.trim())) await store.unbanUser(roomId, u);
-                    return res.json({ success: true, system: 'Users unbanned' });
-                }
-            }
-        }
+        // Slash commands removed by request
 
         const msgs = await store.getMessages(roomId);
         const last = msgs[msgs.length - 1];
