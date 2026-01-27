@@ -67,7 +67,7 @@ class MemoryStore {
     async getRoom(id) { return this.rooms[id] || null; }
 
     async createRoom(id, passkey) {
-        this.rooms[id] = { passkey, messages: [], users: {}, bans: new Set() };
+        this.rooms[id] = { passkey, messages: [], users: {}, bans: new Set(), typing: {} };
     }
 
     async getMessages(id) { return this.rooms[id]?.messages || []; }
@@ -75,8 +75,61 @@ class MemoryStore {
     async addMessage(id, msg) {
         const room = this.rooms[id];
         if (!room) return;
+        msg.reactions = {};
+        msg.readBy = [msg.name];
         room.messages.push(msg);
         if (room.messages.length > MAX_MESSAGES) room.messages = room.messages.slice(-MAX_MESSAGES);
+    }
+
+    // Typing
+    async setTyping(id, username, isTyping) {
+        const room = this.rooms[id];
+        if (!room) return;
+        if (isTyping) {
+            room.typing[username] = Date.now();
+        } else {
+            delete room.typing[username];
+        }
+    }
+
+    async getTyping(id) {
+        const room = this.rooms[id];
+        if (!room) return [];
+        const now = Date.now();
+        // Clean up stale typing (older than 3 seconds)
+        room.typing = Object.fromEntries(
+            Object.entries(room.typing).filter(([_, time]) => now - time < 3000)
+        );
+        return Object.keys(room.typing);
+    }
+
+    // Reactions
+    async addReaction(id, messageId, emoji, username) {
+        const room = this.rooms[id];
+        if (!room) return;
+        const msg = room.messages.find(m => m.id == messageId);
+        if (!msg) return;
+        if (!msg.reactions) msg.reactions = {};
+        if (!msg.reactions[emoji]) msg.reactions[emoji] = [];
+        const idx = msg.reactions[emoji].indexOf(username);
+        if (idx === -1) {
+            msg.reactions[emoji].push(username);
+        } else {
+            msg.reactions[emoji].splice(idx, 1);
+            if (msg.reactions[emoji].length === 0) delete msg.reactions[emoji];
+        }
+    }
+
+    // Read receipts
+    async markRead(id, username, lastRead) {
+        const room = this.rooms[id];
+        if (!room) return;
+        room.messages.forEach(msg => {
+            if (msg.id <= lastRead && msg.name !== username) {
+                if (!msg.readBy) msg.readBy = [msg.name];
+                if (!msg.readBy.includes(username)) msg.readBy.push(username);
+            }
+        });
     }
 
     async clearMessages(id) { if (this.rooms[id]) this.rooms[id].messages = []; }
@@ -307,6 +360,63 @@ class PostgresStore {
     async unbanUser(id, name) { await this.pool.query('DELETE FROM bans WHERE room_id=$1 AND name=$2', [id, name]); }
 
     async unbanAll(id) { await this.pool.query('DELETE FROM bans WHERE room_id=$1', [id]); }
+
+    // In-memory typing cache (too real-time for DB)
+    typingCache = {};
+
+    async setTyping(id, username, isTyping) {
+        if (!this.typingCache[id]) this.typingCache[id] = {};
+        if (isTyping) {
+            this.typingCache[id][username] = Date.now();
+        } else {
+            delete this.typingCache[id][username];
+        }
+    }
+
+    async getTyping(id) {
+        if (!this.typingCache[id]) return [];
+        const now = Date.now();
+        this.typingCache[id] = Object.fromEntries(
+            Object.entries(this.typingCache[id]).filter(([_, time]) => now - time < 3000)
+        );
+        return Object.keys(this.typingCache[id]);
+    }
+
+    // In-memory reactions cache (columns not added to avoid migration complexity)
+    reactionsCache = {};
+
+    async addReaction(id, messageId, emoji, username) {
+        const key = `${id}:${messageId}`;
+        if (!this.reactionsCache[key]) this.reactionsCache[key] = {};
+        if (!this.reactionsCache[key][emoji]) this.reactionsCache[key][emoji] = [];
+        const idx = this.reactionsCache[key][emoji].indexOf(username);
+        if (idx === -1) {
+            this.reactionsCache[key][emoji].push(username);
+        } else {
+            this.reactionsCache[key][emoji].splice(idx, 1);
+            if (this.reactionsCache[key][emoji].length === 0) delete this.reactionsCache[key][emoji];
+        }
+    }
+
+    getReactions(id, messageId) {
+        const key = `${id}:${messageId}`;
+        return this.reactionsCache[key] || {};
+    }
+
+    // In-memory read receipts
+    readCache = {};
+
+    async markRead(id, username, lastRead) {
+        if (!this.readCache[id]) this.readCache[id] = {};
+        this.readCache[id][username] = lastRead;
+    }
+
+    getReadBy(id, messageId) {
+        if (!this.readCache[id]) return [];
+        return Object.entries(this.readCache[id])
+            .filter(([_, lastRead]) => lastRead >= messageId)
+            .map(([username]) => username);
+    }
 }
 
 // Initialize store
@@ -452,13 +562,14 @@ app.get('/poll', async (req, res) => {
             if (!await store.touchUser(roomId, username, token)) return res.status(403).json({ error: 'Invalid session' });
         }
 
-        const [messages, users, isAdmin] = await Promise.all([
+        const [messages, users, isAdmin, typing] = await Promise.all([
             store.getMessages(roomId),
             store.getUsers(roomId),
-            username ? store.isAdmin(roomId, username) : false
+            username ? store.isAdmin(roomId, username) : false,
+            store.getTyping(roomId)
         ]);
 
-        res.json({ messages, users, isAdmin, passkey: isAdmin && roomId !== 'world' ? room.passkey : undefined });
+        res.json({ messages, users, isAdmin, typing, passkey: isAdmin && roomId !== 'world' ? room.passkey : undefined });
     } catch (e) { res.status(500).end(); }
 });
 
@@ -546,6 +657,54 @@ app.post('/leave', async (req, res) => {
         await store.removeUser(roomId, username);
     }
     res.json({ success: true });
+});
+
+// Typing indicator
+app.post('/typing', async (req, res) => {
+    try {
+        const { roomId, passkey, username, token, typing } = req.body;
+        const room = await store.getRoom(roomId);
+        if (!room) return res.status(404).end();
+        if (roomId !== 'world' && room.passkey !== passkey) return res.status(403).end();
+        if (!await store.verifyToken(roomId, username, token)) return res.status(403).end();
+
+        await store.setTyping(roomId, username, typing);
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).end();
+    }
+});
+
+// Message reactions
+app.post('/react', async (req, res) => {
+    try {
+        const { roomId, passkey, messageId, emoji, username, token } = req.body;
+        const room = await store.getRoom(roomId);
+        if (!room) return res.status(404).end();
+        if (roomId !== 'world' && room.passkey !== passkey) return res.status(403).end();
+        if (!await store.verifyToken(roomId, username, token)) return res.status(403).end();
+
+        await store.addReaction(roomId, messageId, emoji, username);
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).end();
+    }
+});
+
+// Read receipts
+app.post('/read', async (req, res) => {
+    try {
+        const { roomId, passkey, username, lastRead, token } = req.body;
+        const room = await store.getRoom(roomId);
+        if (!room) return res.status(404).end();
+        if (roomId !== 'world' && room.passkey !== passkey) return res.status(403).end();
+        if (!await store.verifyToken(roomId, username, token)) return res.status(403).end();
+
+        await store.markRead(roomId, username, lastRead);
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).end();
+    }
 });
 
 // Start server
