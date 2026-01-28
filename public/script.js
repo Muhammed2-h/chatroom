@@ -31,10 +31,8 @@ const els = {
     actionBtn: $('action-btn'), messageList: $('messages'),
     roomControls: $('room-controls'), pkVal: $('pk-val'),
     soundToggle: $('sound-toggle'), clearBtn: $('clear-btn'),
-    logoutBtn: $('logout-btn'), onlineUsersDiv: $('online-users'),
+    logoutBtn: $('logout-btn'), leaveRoomBtn: $('leave-room-btn'), onlineUsersDiv: $('online-users'),
     formStatus: $('form-status'), typingIndicator: $('typing-indicator'),
-    pinnedBar: $('pinned-message-bar'), pinnedContent: $('pinned-message-content'),
-    unpinBtn: $('unpin-btn'), msgTemplate: $('msg-template'),
     pinnedBar: $('pinned-message-bar'), pinnedContent: $('pinned-message-content'),
     unpinBtn: $('unpin-btn'), msgTemplate: $('msg-template'),
     connectionStatus: $('connection-status'),
@@ -184,6 +182,32 @@ const showChatInterface = () => {
     const newUrl = new URL(window.location.href);
     newUrl.searchParams.set('room', roomId);
     window.history.pushState({}, '', newUrl);
+};
+
+const leaveRoom = async () => {
+    isJoined = false;
+    isPolling = false;
+    roomId = '';
+    
+    // Clear chat UI
+    els.messageList.innerHTML = '';
+    els.onlineUsersDiv.innerHTML = '';
+    els.pkVal.textContent = '***';
+    
+    const newUrl = new URL(window.location.href);
+    newUrl.searchParams.delete('room');
+    window.history.pushState({}, '', newUrl); // URL Cleanup
+
+    if (sessionToken) {
+        // Optional: Notify server we left (fire and forget)
+         await fetch('/leave', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ roomId: els.headerTitle.textContent.replace('Room: ', ''), username: myUsername, token: sessionToken })
+        }).catch(() => {});
+    }
+
+    showRoomSelection();
 };
 
 const fetchRooms = async () => {
@@ -674,10 +698,13 @@ const startPolling = () => {
 
 // ===== EVENT LISTENERS =====
 els.setRoomBtn.addEventListener('click', () => {
-    const val = els.initialRoomInput.value.trim();
-    if (val) { roomId = val; showChatInterface(); }
+    roomId = els.initialRoomInput.value.trim();
+    if (roomId) showChatInterface();
 });
 
+els.leaveRoomBtn.addEventListener('click', leaveRoom);
+
+// Auto-fetch rooms on load if likely to show selection
 els.initialRoomInput.addEventListener('keypress', (e) => e.key === 'Enter' && els.setRoomBtn.click());
 $('world-chat-btn').addEventListener('click', () => { roomId = 'world'; showChatInterface(); });
 
