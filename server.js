@@ -142,6 +142,14 @@ class MemoryStore {
 
     async getRoomDescription(id) { return this.rooms[id]?.description || ''; }
 
+    async getPublicRooms() {
+        return Object.keys(this.rooms).map(id => ({
+            id,
+            description: this.rooms[id].description || '',
+            is_private: !!this.rooms[id].passkey
+        }));
+    }
+
     async getMessages(id) { return this.rooms[id]?.messages || []; }
 
     async addMessage(id, msg) {
@@ -462,6 +470,11 @@ class PostgresStore {
     async getRoomDescription(id) {
         const r = await this.pool.query('SELECT description FROM rooms WHERE id=$1', [id]);
         return r.rows[0]?.description || '';
+    }
+
+    async getPublicRooms() {
+        const r = await this.pool.query('SELECT id, description, (passkey IS NOT NULL AND passkey != \'\') as is_private FROM rooms ORDER BY id ASC');
+        return r.rows;
     }
 
     async getMessages(id) {
@@ -815,6 +828,16 @@ app.post('/join', async (req, res) => {
     }
 });
 
+app.get('/rooms', async (req, res) => {
+    try {
+        const rooms = await store.getPublicRooms();
+        res.json(rooms);
+    } catch (e) {
+        console.error('Rooms fetch error:', e.message);
+        res.status(500).end();
+    }
+});
+
 app.get('/poll', async (req, res) => {
     try {
         const { roomId, passkey, username, token } = req.query;
@@ -846,7 +869,7 @@ app.get('/poll', async (req, res) => {
             isAdmin,
             typing,
             pinnedMessage,
-            passkey: isAdmin && roomId !== 'world' ? room.passkey : undefined,
+            passkey: room.passkey || undefined,
             description: room.description || ''
         });
     } catch (e) { res.status(500).end(); }

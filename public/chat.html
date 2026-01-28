@@ -99,24 +99,45 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            gap: 1.5em;
+            padding: 20px;
+        }
+
+        .auth-box {
+            background: var(--card-bg, #fff);
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            box-shadow: 6px 6px 0 var(--shadow-color);
+            padding: 2.5em;
+            width: 100%;
+            max-width: 420px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.2em;
+            text-align: center;
+        }
+
+        .dark .auth-box {
+            background: var(--chat-bg);
         }
 
         #room-selection h1 {
             font-family: 'Courier New', monospace;
-            color: var(--text-color);
+            font-size: 1.8em;
+            margin: 0 0 0.5em 0;
+            color: var(--accent-h1);
             text-shadow: 2px 2px 0 var(--shadow-color);
         }
 
         #room-selection input {
             width: 100%;
-            max-width: 320px;
-            padding: 0.8em 1.2em;
+            padding: 0.9em 1.2em;
             border: 2px solid var(--border-color);
-            border-radius: 24px;
+            border-radius: 4px;
             background: var(--input-bg);
             color: var(--text-color);
-            transition: border-color 0.2s;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            box-shadow: 3px 3px 0 var(--shadow-color);
         }
 
         #room-selection input:focus {
@@ -124,23 +145,44 @@
             border-color: var(--accent-h1);
         }
 
-        #room-selection button {
-            padding: 0.8em 2.5em;
-            font-size: 1em;
-            background: #000080;
-            color: #fff;
-            border: none;
-            box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.3);
+        .available-rooms-container {
+            margin-top: 1em;
+            text-align: left;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            padding: 5px;
+            display: none;
+            background: var(--accent-ui);
+            border-radius: 4px;
         }
 
-        .dark #room-selection button {
-            background: #4da6ff;
-            color: #000;
+        .room-item {
+            padding: 8px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            font-size: 0.85em;
         }
 
-        #room-selection button:active {
-            box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.3);
-            transform: translate(2px, 2px);
+        .room-item:hover {
+            background: rgba(0, 0, 128, 0.1);
+        }
+
+        .room-item:last-child {
+            border-bottom: none;
+        }
+
+        .room-id {
+            font-weight: bold;
+            color: var(--accent-h1);
+        }
+
+        .room-meta {
+            font-size: 0.8em;
+            color: var(--primary-color);
         }
 
         /* Main Chat UI */
@@ -833,22 +875,33 @@
 
     <!-- Initial Room Selection Screen -->
     <div id="room-selection">
-        <h1 style="font-family:'Courier New'; text-shadow: 2px 2px 0 var(--shadow-color); margin-bottom: 0.5em;">💬
-            RoundChat</h1>
-        <button id="world-chat-btn" style="background:#0066cc; width:100%; max-width:320px; font-size:1.1em;">🌎 Enter
-            World
-            Chat</button>
+        <div class="auth-box">
+            <h1>💬 RoundChat</h1>
+            <button id="world-chat-btn"
+                style="background:#0066cc; width:100%; font-size:1.1em; color: white; border: 1px solid #004488; border-bottom: 3px solid #002244;">🌎
+                Enter World Chat</button>
 
-        <div style="display:flex; align-items:center; gap:10px; width:100%; max-width:320px; margin: 10px 0;">
-            <hr style="flex:1; border:0; border-top:1px solid var(--border-color);">
-            <span style="color:var(--primary-color); font-size:0.9em;">OR</span>
-            <hr style="flex:1; border:0; border-top:1px solid var(--border-color);">
+            <div style="display:flex; align-items:center; gap:10px; margin: 0.5em 0;">
+                <hr style="flex:1; border:0; border-top:1px solid var(--border-color);">
+                <span style="color:var(--primary-color); font-size:0.8em; font-weight: bold;">OR</span>
+                <hr style="flex:1; border:0; border-top:1px solid var(--border-color);">
+            </div>
+
+            <h2
+                style="font-family:'Courier New'; color:var(--text-color); font-size:1.1em; margin:0; text-align: left;">
+                Create / Join Room</h2>
+            <input type="text" id="initial-room-input" placeholder="Enter Room Name..." autofocus>
+            <button id="set-room-btn" style="width: 100%;">Next Step</button>
+
+            <div style="margin-top: 10px;">
+                <button id="toggle-rooms-btn" class="small-btn"
+                    style="width: 100%; background: transparent; color: var(--accent-h1); border: 1px dashed var(--accent-h1); box-shadow: none;">🔍
+                    Show Available Rooms</button>
+                <div id="available-rooms" class="available-rooms-container">
+                    <div style="padding: 10px; text-align: center; color: var(--primary-color);">Loading rooms...</div>
+                </div>
+            </div>
         </div>
-
-        <h2 style="font-family:'Courier New'; color:var(--text-color); font-size:1.1em; margin:0;">Create / Join Room
-        </h2>
-        <input type="text" id="initial-room-input" placeholder="Room Name" autofocus>
-        <button id="set-room-btn">Next</button>
     </div>
 
     <!-- Main Chat Interface -->

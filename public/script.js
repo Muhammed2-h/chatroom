@@ -35,7 +35,8 @@ const els = {
     formStatus: $('form-status'), typingIndicator: $('typing-indicator'),
     pinnedBar: $('pinned-message-bar'), pinnedContent: $('pinned-message-content'),
     unpinBtn: $('unpin-btn'), msgTemplate: $('msg-template'),
-    connectionStatus: $('connection-status')
+    connectionStatus: $('connection-status'),
+    toggleRoomsBtn: $('toggle-rooms-btn'), availableRoomsDiv: $('available-rooms')
 };
 
 let roomId = new URLSearchParams(window.location.search).get('room');
@@ -180,6 +181,36 @@ const showChatInterface = () => {
     const newUrl = new URL(window.location.href);
     newUrl.searchParams.set('room', roomId);
     window.history.pushState({}, '', newUrl);
+};
+
+const fetchRooms = async () => {
+    els.availableRoomsDiv.innerHTML = '<div style="padding:10px;text-align:center;">Loading...</div>';
+    try {
+        const res = await fetch('/rooms');
+        if (!res.ok) throw new Error('Failed');
+        const rooms = await res.json();
+
+        if (rooms.length === 0) {
+            els.availableRoomsDiv.innerHTML = '<div style="padding:10px;text-align:center;">No active rooms found. Create one!</div>';
+            return;
+        }
+
+        els.availableRoomsDiv.innerHTML = rooms.map(r => `
+            <div class="room-item" onclick="selectRoom('${r.id}')">
+                <span class="room-id">${r.id} ${r.is_private ? '🔒' : ''}</span>
+                <span class="room-meta">${r.is_private ? 'Private' : 'Open'}</span>
+            </div>
+        `).join('');
+    } catch (e) {
+        els.availableRoomsDiv.innerHTML = '<div style="padding:10px;text-align:center;color:red;">Error loading rooms</div>';
+    }
+};
+
+window.selectRoom = (id) => {
+    els.initialRoomInput.value = id;
+    els.availableRoomsDiv.style.display = 'none';
+    els.toggleRoomsBtn.textContent = '🔍 Show Available Rooms';
+    showChatInterface();
 };
 
 const initJoinMode = () => {
