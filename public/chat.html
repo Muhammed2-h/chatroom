@@ -152,7 +152,8 @@
             overflow-y: auto;
             border: 1px solid var(--border-color);
             padding: 5px;
-            display: none;
+            display: block;
+            /* Always visible */
             background: var(--accent-ui);
             border-radius: 4px;
         }
@@ -893,10 +894,9 @@
             <input type="text" id="initial-room-input" placeholder="Enter Room Name..." autofocus>
             <button id="set-room-btn" style="width: 100%;">Next Step</button>
 
-            <div style="margin-top: 10px;">
-                <button id="toggle-rooms-btn" class="small-btn"
-                    style="width: 100%; background: transparent; color: var(--accent-h1); border: 1px dashed var(--accent-h1); box-shadow: none;">🔍
-                    Show Available Rooms</button>
+            <div style="margin-top: 20px;">
+                <h3 style="font-size: 0.9em; text-align: left; margin-bottom: 5px; color: var(--primary-color);">
+                    Available Rooms:</h3>
                 <div id="available-rooms" class="available-rooms-container">
                     <div style="padding: 10px; text-align: center; color: var(--primary-color);">Loading rooms...</div>
                 </div>

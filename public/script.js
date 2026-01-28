@@ -35,8 +35,10 @@ const els = {
     formStatus: $('form-status'), typingIndicator: $('typing-indicator'),
     pinnedBar: $('pinned-message-bar'), pinnedContent: $('pinned-message-content'),
     unpinBtn: $('unpin-btn'), msgTemplate: $('msg-template'),
+    pinnedBar: $('pinned-message-bar'), pinnedContent: $('pinned-message-content'),
+    unpinBtn: $('unpin-btn'), msgTemplate: $('msg-template'),
     connectionStatus: $('connection-status'),
-    toggleRoomsBtn: $('toggle-rooms-btn'), availableRoomsDiv: $('available-rooms')
+    availableRoomsDiv: $('available-rooms')
 };
 
 let roomId = new URLSearchParams(window.location.search).get('room');
@@ -171,6 +173,7 @@ const showRoomSelection = () => {
     els.roomSelection.style.display = 'flex';
     els.chatInterface.style.display = 'none';
     els.initialRoomInput.focus();
+    fetchRooms();
 };
 
 const showChatInterface = () => {
@@ -208,8 +211,6 @@ const fetchRooms = async () => {
 
 window.selectRoom = (id) => {
     els.initialRoomInput.value = id;
-    els.availableRoomsDiv.style.display = 'none';
-    els.toggleRoomsBtn.textContent = '🔍 Show Available Rooms';
     showChatInterface();
 };
 
