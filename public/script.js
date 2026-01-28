@@ -41,6 +41,7 @@ const els = {
 let roomId = new URLSearchParams(window.location.search).get('room');
 let passkey = '', myUsername = '', sessionToken = '', isJoined = false, lastMessageId = -1, isPolling = false, isAdmin = false;
 let typingTimeout = null, isTyping = false, currentPinnedMessage = null;
+const messageCache = new Map(); // Performance: Track message elements
 
 // ===== DARK MODE & THEMES =====
 const initTheme = () => {
@@ -495,6 +496,7 @@ const appendMessage = (msg) => {
     }
 
     els.messageList.append(li);
+    if (!msg.pending && msg.id) messageCache.set(msg.id, li);
     els.messageList.scrollTop = els.messageList.scrollHeight;
 };
 
@@ -563,12 +565,14 @@ const poll = async () => {
         if (messages.length === 0 && lastMessageId > 0 ||
             messages.length > 0 && messages[messages.length - 1].id < lastMessageId) {
             els.messageList.querySelectorAll('li:not(template)').forEach(el => el.remove());
+            messageCache.clear();
             lastMessageId = -1;
         }
 
         messages.forEach(msg => {
-            const existing = els.messageList.querySelector(`li[data-id="${msg.id}"]`);
+            const existing = messageCache.get(msg.id) || els.messageList.querySelector(`li[data-id="${msg.id}"]`);
             if (existing) {
+                if (!messageCache.has(msg.id)) messageCache.set(msg.id, existing); // Fill cache
                 renderReactions(existing, msg.reactions);
                 const readReceipt = msg.name === myUsername ?
                     `<span class="read-receipt ${msg.readBy?.length > 1 ? 'read' : ''}">✓${msg.readBy?.length > 1 ? '✓' : ''}</span>` : '';

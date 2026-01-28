@@ -315,8 +315,8 @@ class PostgresStore {
                         );
                         CREATE TABLE IF NOT EXISTS sessions (token TEXT PRIMARY KEY, email TEXT REFERENCES accounts(email), display_name TEXT, expires_at BIGINT);
                         INSERT INTO rooms (id, passkey) VALUES ('world', NULL) ON CONFLICT DO NOTHING;
-                        CREATE INDEX IF NOT EXISTS idx_msg_room ON messages(room_id);
-                        CREATE INDEX IF NOT EXISTS idx_users_room ON room_users(room_id);
+                        CREATE INDEX IF NOT EXISTS idx_msg_room_id ON messages(room_id, id DESC);
+                        CREATE INDEX IF NOT EXISTS idx_users_room_seen ON room_users(room_id, last_seen);
                         CREATE INDEX IF NOT EXISTS idx_sessions_email ON sessions(email);
                     `);
                     await client.query(`
@@ -482,15 +482,21 @@ class PostgresStore {
 
     async getUsers(id) {
         const threshold = Date.now() - USER_TIMEOUT;
-        await this.pool.query('DELETE FROM room_users WHERE room_id=$1 AND last_seen<$2', [id, threshold]);
-        // Filter out Super Admin if configured
-        let r;
-        if (ADMIN_EMAIL) {
-            r = await this.pool.query('SELECT name, avatar, status, bio FROM room_users WHERE room_id=$1 AND (email IS NULL OR email != $2)', [id, ADMIN_EMAIL.toLowerCase()]);
-        } else {
-            r = await this.pool.query('SELECT name, avatar, status, bio FROM room_users WHERE room_id=$1', [id]);
-        }
+        // Efficient one-step fetch with active filtering
+        const query = ADMIN_EMAIL
+            ? 'SELECT name, avatar, status, bio FROM room_users WHERE room_id=$1 AND last_seen >= $2 AND (email IS NULL OR email != $3)'
+            : 'SELECT name, avatar, status, bio FROM room_users WHERE room_id=$1 AND last_seen >= $2';
+        const params = ADMIN_EMAIL ? [id, threshold, ADMIN_EMAIL.toLowerCase()] : [id, threshold];
+        const r = await this.pool.query(query, params);
         return r.rows;
+    }
+
+    // New periodic cleanup instead of every poll
+    async cleanupStaleUsers() {
+        const threshold = Date.now() - (USER_TIMEOUT * 2);
+        try {
+            await this.pool.query('DELETE FROM room_users WHERE last_seen < $1', [threshold]);
+        } catch (e) { }
     }
 
     async touchUser(id, name, token) {
@@ -611,7 +617,12 @@ class PostgresStore {
 
 // Initialize store
 let store = process.env.DATABASE_URL ? new PostgresStore(process.env.DATABASE_URL) : new MemoryStore();
-store.init().catch(e => {
+store.init().then(() => {
+    // Run DB cleanup every minute
+    if (store instanceof PostgresStore) {
+        setInterval(() => store.cleanupStaleUsers(), 60000);
+    }
+}).catch(e => {
     console.error('⚠️ DB init failed, using memory:', e.message);
     store = new MemoryStore();
     store.init();
@@ -857,10 +868,11 @@ app.post('/send', async (req, res) => {
 
         // Slash commands removed by request
 
-        const msgs = await store.getMessages(roomId);
-        const last = msgs[msgs.length - 1];
+        // Efficient duplicate check (fetch only last message)
+        const lastMsgResult = await store.pool.query('SELECT name, content, created_at as time FROM messages WHERE room_id=$1 ORDER BY id DESC LIMIT 1', [roomId]);
+        const last = lastMsgResult.rows[0];
         const now = Math.floor(Date.now() / 1000);
-        if (last?.name === name && last?.content === content && now - last.time < 2) {
+        if (last?.name === name && last?.content === content && now - (+last.time) < 2) {
             return res.json({ success: true, duplicate: true });
         }
 
