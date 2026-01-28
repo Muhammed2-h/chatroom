@@ -213,25 +213,35 @@ const leaveRoom = async () => {
 };
 
 const fetchRooms = async () => {
-    els.availableRoomsDiv.innerHTML = '<div style="padding:10px;text-align:center;">Loading...</div>';
+    if (!els.availableRoomsDiv) return;
+    els.availableRoomsDiv.innerHTML = '<div style="padding:10px;text-align:center;color:var(--text-color);">Loading rooms...</div>';
+    
     try {
         const res = await fetch('/rooms');
-        if (!res.ok) throw new Error('Failed');
+        if (!res.ok) throw new Error(`Server error: ${res.status}`);
         const rooms = await res.json();
 
+        if (!Array.isArray(rooms)) throw new Error('Invalid response format');
+        
         if (rooms.length === 0) {
             els.availableRoomsDiv.innerHTML = '<div style="padding:10px;text-align:center;">No active rooms found. Create one!</div>';
             return;
         }
 
-        els.availableRoomsDiv.innerHTML = rooms.map(r => `
-            <div class="room-item" onclick="selectRoom('${r.id}')">
+        els.availableRoomsDiv.innerHTML = rooms.map(r => {
+            const safeId = r.id.replace(/'/g, "\\'"); // Escape quotes
+            return `
+            <div class="room-item" onclick="selectRoom('${safeId}')">
                 <span class="room-id">${r.id} ${r.is_private ? '🔒' : ''}</span>
                 <span class="room-meta">${r.is_private ? 'Private' : 'Open'}</span>
             </div>
-        `).join('');
+        `}).join('');
     } catch (e) {
-        els.availableRoomsDiv.innerHTML = '<div style="padding:10px;text-align:center;color:red;">Error loading rooms</div>';
+        console.error('Fetch Rooms Error:', e);
+        els.availableRoomsDiv.innerHTML = `<div style="padding:10px;text-align:center;color:red;">
+            Failed to load rooms.<br>
+            <button class="small-btn" onclick="fetchRooms()" style="margin-top:5px">Retry</button>
+        </div>`;
     }
 };
 
