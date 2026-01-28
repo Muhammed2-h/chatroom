@@ -421,22 +421,22 @@ const appendMessage = (msg) => {
     }
 
     const li = template.content.cloneNode(true).querySelector('li');
+    const isMine = msg.name === myUsername;
+    li.classList.add(isMine ? 'message-mine' : 'message-other');
 
     if (msg.pending) {
         li.classList.add('pending');
         li.querySelector('small').textContent = msg.name;
-        li.querySelector('.msg-content').innerHTML = processMentions(msg.content); // basic sanitization handled by server, but text content vs innerHTML...
-        // For pending, just text
         li.querySelector('.msg-content').textContent = msg.content;
     } else {
         li.classList.remove('pending');
         const timeStr = formatTime(msg.time);
 
         // Read receipt
-        const readReceipt = msg.name === myUsername ?
+        const readReceipt = isMine ?
             `<span class="read-receipt ${msg.readBy?.length > 1 ? 'read' : ''}">✓${msg.readBy?.length > 1 ? '✓' : ''}</span>` : '';
 
-        li.querySelector('small').innerHTML = `<b>${msg.name}</b> <span style="opacity:0.8; font-weight:normal;">${timeStr}</span>${readReceipt}`;
+        li.querySelector('small').innerHTML = `<b>${msg.name}</b> • ${timeStr} ${readReceipt}`;
 
         // Content with mentions
         // We trust the server sanitized logic, but let's be safe and escape HTML first then add mentions

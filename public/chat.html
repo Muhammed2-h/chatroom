@@ -264,7 +264,7 @@
 			flex: 1 1 auto;
 			overflow-y: auto;
 			margin: 0;
-			padding: 1em;
+			padding: 1.5em;
 			list-style: none;
 			background: var(--chat-bg);
 			border: 2px solid var(--border-color);
@@ -272,23 +272,54 @@
 			box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.05);
 			display: flex;
 			flex-direction: column;
+			gap: 0.5em;
 			color: var(--text-color);
 		}
 
 		ul#messages li {
-			margin: 0.4em 0;
-			padding: 8px 10px;
+			padding: 10px 14px;
 			word-wrap: break-word;
 			line-height: 1.4;
-			background: var(--msg-bg);
-			border-radius: 6px;
-			border: 1px solid var(--border-color);
 			position: relative;
+			max-width: 85%;
+			width: fit-content;
+			border: 1px solid var(--border-color);
+			box-shadow: 2px 2px 0 var(--shadow-color);
+			transition: all 0.2s;
+		}
+
+		/* Message Alignment */
+		ul#messages li.message-other {
+			align-self: flex-start;
+			background: var(--msg-bg);
+			border-bottom-left-radius: 2px;
+			border-top-left-radius: 12px;
+			border-top-right-radius: 12px;
+			border-bottom-right-radius: 12px;
+		}
+
+		ul#messages li.message-mine {
+			align-self: flex-end;
+			background: #e1f5fe;
+			border-color: #81d4fa;
+			border-bottom-right-radius: 2px;
+			border-top-left-radius: 12px;
+			border-top-right-radius: 12px;
+			border-bottom-left-radius: 12px;
+			text-align: right;
+		}
+
+		.dark ul#messages li.message-mine {
+			background: #1e3a8a;
+			border-color: #2563eb;
+			color: #e0f2fe;
 		}
 
 		ul#messages li:hover {
-			background: var(--accent-ui);
+			transform: translateY(-1px);
+			box-shadow: 3px 3px 0 var(--shadow-color);
 		}
+
 
 		/* Pinned Message Styling in Chat */
 		ul#messages li.pinned {
@@ -331,15 +362,21 @@
 		}
 
 		ul#messages li small {
-			display: inline-block;
-			font-size: 0.85em;
+			display: block;
+			font-size: 0.75em;
+			font-weight: 600;
+			margin-bottom: 4px;
+			opacity: 0.8;
 			color: var(--accent-h1);
-			margin-right: 0.5em;
+		}
+
+		.message-mine small {
+			text-align: right;
 		}
 
 		ul#messages li .msg-content {
 			display: block;
-			margin-top: 4px;
+			font-size: 1em;
 		}
 
 		ul#messages li.pending {
@@ -353,6 +390,10 @@
 			gap: 4px;
 			margin-top: 6px;
 			flex-wrap: wrap;
+		}
+
+		.message-mine .msg-reactions {
+			justify-content: flex-end;
 		}
 
 		.reaction-btn {
@@ -404,6 +445,11 @@
 			gap: 4px;
 			z-index: 100;
 			box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
+		}
+
+		.message-mine .reaction-picker {
+			left: auto;
+			right: 0;
 		}
 
 		.reaction-picker.show {
