@@ -17,6 +17,8 @@ const THEME_COLORS = {
 const audioObj = new Audio(BEEP_URL);
 let isTabActive = true;
 let pollFailCount = 0;
+let pollDelay = 2000;
+const MAX_POLL_DELAY = 30000;
 
 const $ = (id) => document.getElementById(id);
 const $$ = (sel) => document.querySelector(sel);
@@ -32,7 +34,8 @@ const els = {
     logoutBtn: $('logout-btn'), onlineUsersDiv: $('online-users'),
     formStatus: $('form-status'), typingIndicator: $('typing-indicator'),
     pinnedBar: $('pinned-message-bar'), pinnedContent: $('pinned-message-content'),
-    unpinBtn: $('unpin-btn'), msgTemplate: $('msg-template')
+    unpinBtn: $('unpin-btn'), msgTemplate: $('msg-template'),
+    connectionStatus: $('connection-status')
 };
 
 let roomId = new URLSearchParams(window.location.search).get('room');
@@ -485,99 +488,117 @@ const updateOnlineList = (users) => {
 
 // ===== POLLING =====
 const poll = async () => {
-    if (!isJoined || isPolling) return;
+    if (isPolling || !isJoined) return;
     isPolling = true;
 
     try {
-        const url = `/poll?roomId=${encodeURIComponent(roomId)}&passkey=${encodeURIComponent(passkey)}&username=${encodeURIComponent(myUsername)}&token=${encodeURIComponent(sessionToken)}`;
-        const res = await fetch(url);
-        pollFailCount = 0;
+        const res = await fetch(`/poll?roomId=${roomId}&passkey=${passkey}&username=${myUsername}&token=${sessionToken}`);
 
-        if (res.status === 403) {
-            const data = await res.json();
-            isJoined = false;
-            if (intervalId) clearTimeout(intervalId);
-            intervalId = null;
-            if (data.banned) {
-                alert('You have been banned from this room.');
-            } else {
-                alert('Session expired or invalid. Please join again.');
-            }
-            window.location.reload();
+        if (res.status === 429) {
+            updateStatusUI('Too many requests. Waiting...', 'error');
+            pollDelay = Math.min(pollDelay * 1.5, MAX_POLL_DELAY);
             return;
         }
 
-        if (res.ok) {
-            const data = await res.json();
-            updateOnlineList(data.users);
-            updateTypingIndicator(data.typing);
-            updatePinnedMessage(data.pinnedMessage);
-            isAdmin = data.isAdmin;
+        if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            pollFailCount++;
+            if (pollFailCount > 3) {
+                updateStatusUI('Connection lost. Retrying...', 'error');
+                pollDelay = Math.min(pollDelay * 1.2, MAX_POLL_DELAY);
+            }
+            if (res.status === 403) {
+                if (data.banned) alert('You have been banned from this room.');
+                else alert('Session expired. Please join again.');
+                window.location.reload();
+            }
+            return;
+        }
 
-            if (isAdmin) {
-                els.headerTitle.textContent = (roomId === 'world' ? '🌎 World Chat' : `Room: ${roomId}`) + ' [ADMIN]';
-                if (data.passkey) {
-                    els.pkVal.textContent = data.passkey;
+        const data = await res.json();
+        pollFailCount = 0;
+        pollDelay = isTabActive ? 2000 : 10000;
+        updateStatusUI(null);
+
+        updateOnlineList(data.users);
+        updateTypingIndicator(data.typing);
+        updatePinnedMessage(data.pinnedMessage);
+        isAdmin = data.isAdmin;
+
+        if (isAdmin) {
+            els.headerTitle.textContent = (roomId === 'world' ? '🌎 World Chat' : `Room: ${roomId}`) + ' [ADMIN]';
+            if (data.passkey) {
+                els.pkVal.textContent = data.passkey;
+            }
+            els.unpinBtn.style.display = currentPinnedMessage ? 'block' : 'none';
+        }
+
+        els.messageList.querySelectorAll('li.pending').forEach(el => el.remove());
+
+        const shouldScroll = (els.messageList.scrollHeight - els.messageList.scrollTop - els.messageList.clientHeight) < 50;
+        let hasNew = false;
+        const messages = data.messages || [];
+
+        if (messages.length === 0 && lastMessageId > 0 ||
+            messages.length > 0 && messages[messages.length - 1].id < lastMessageId) {
+            els.messageList.querySelectorAll('li:not(template)').forEach(el => el.remove());
+            lastMessageId = -1;
+        }
+
+        messages.forEach(msg => {
+            const existing = els.messageList.querySelector(`li[data-id="${msg.id}"]`);
+            if (existing) {
+                renderReactions(existing, msg.reactions);
+                const readReceipt = msg.name === myUsername ?
+                    `<span class="read-receipt ${msg.readBy?.length > 1 ? 'read' : ''}">✓${msg.readBy?.length > 1 ? '✓' : ''}</span>` : '';
+                if (existing.querySelector('.read-receipt')) {
+                    existing.querySelector('.read-receipt').className = `read-receipt ${msg.readBy?.length > 1 ? 'read' : ''}`;
+                    existing.querySelector('.read-receipt').innerHTML = `✓${msg.readBy?.length > 1 ? '✓' : ''}`;
                 }
-                els.unpinBtn.style.display = currentPinnedMessage ? 'block' : 'none';
-            }
-
-            els.messageList.querySelectorAll('li.pending').forEach(el => el.remove());
-
-            const shouldScroll = (els.messageList.scrollHeight - els.messageList.scrollTop - els.messageList.clientHeight) < 50;
-            let hasNew = false;
-            const messages = data.messages || [];
-
-            if (messages.length === 0 && lastMessageId > 0 ||
-                messages.length > 0 && messages[messages.length - 1].id < lastMessageId) {
-                els.messageList.querySelectorAll('li:not(template)').forEach(el => el.remove());
-                lastMessageId = -1;
-            }
-
-            messages.forEach(msg => {
-                const existing = els.messageList.querySelector(`li[data-id="${msg.id}"]`);
-                if (existing) {
-                    renderReactions(existing, msg.reactions);
-                    const readReceipt = msg.name === myUsername ?
-                        `<span class="read-receipt ${msg.readBy?.length > 1 ? 'read' : ''}">✓${msg.readBy?.length > 1 ? '✓' : ''}</span>` : '';
-                    if (existing.querySelector('.read-receipt')) {
-                        existing.querySelector('.read-receipt').className = `read-receipt ${msg.readBy?.length > 1 ? 'read' : ''}`;
-                        existing.querySelector('.read-receipt').innerHTML = `✓${msg.readBy?.length > 1 ? '✓' : ''}`;
-                    }
-                    if (currentPinnedMessage && currentPinnedMessage.id === msg.id) existing.classList.add('pinned');
-                    else existing.classList.remove('pinned');
-                } else if (msg.id > lastMessageId) {
-                    appendMessage(msg);
-                    lastMessageId = msg.id;
-                    hasNew = true;
-                    if (msg.content.includes(`@${myUsername}`)) {
-                        sendNotification(`New mention in ${roomId}`, `${msg.name}: ${msg.content}`);
-                        playSound();
-                    } else if (msg.name !== myUsername) {
-                        sendNotification(`New message in ${roomId}`, `${msg.name}: ${msg.content}`);
-                    }
+                if (currentPinnedMessage && currentPinnedMessage.id === msg.id) existing.classList.add('pinned');
+                else existing.classList.remove('pinned');
+            } else if (msg.id > lastMessageId) {
+                appendMessage(msg);
+                lastMessageId = msg.id;
+                hasNew = true;
+                if (msg.content.includes(`@${myUsername}`)) {
+                    sendNotification(`New mention in ${roomId}`, `${msg.name}: ${msg.content}`);
+                    playSound();
+                } else if (msg.name !== myUsername) {
+                    sendNotification(`New message in ${roomId}`, `${msg.name}: ${msg.content}`);
                 }
-            });
-
-            if (hasNew && messages[messages.length - 1].name !== myUsername) playSound();
-            const items = Array.from(els.messageList.querySelectorAll('li:not(template)'));
-            if (items.length > 100) items.slice(0, items.length - 100).forEach(el => el.remove());
-            if (shouldScroll && hasNew) els.messageList.scrollTop = els.messageList.scrollHeight;
-
-            if (messages.length > 0) {
-                fetch('/read', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ roomId, passkey, username: myUsername, lastRead: messages[messages.length - 1].id, token: sessionToken })
-                }).catch(() => { });
             }
+        });
+
+        if (hasNew && messages[messages.length - 1].name !== myUsername) playSound();
+        const items = Array.from(els.messageList.querySelectorAll('li:not(template)'));
+        if (items.length > 100) items.slice(0, items.length - 100).forEach(el => el.remove());
+        if (shouldScroll && hasNew) els.messageList.scrollTop = els.messageList.scrollHeight;
+
+        if (messages.length > 0) {
+            fetch('/read', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ roomId, passkey, username: myUsername, lastRead: messages[messages.length - 1].id, token: sessionToken })
+            }).catch(() => { });
         }
     } catch (e) {
         pollFailCount++;
-        if (pollFailCount > 5) showFormStatus('Connection lost. Reconnecting...');
+        pollDelay = Math.min(pollDelay * 1.2, MAX_POLL_DELAY);
+        if (pollFailCount > 3) updateStatusUI('Network error. Reconnecting...', 'error');
     } finally {
         isPolling = false;
     }
+};
+
+const updateStatusUI = (message, type = '') => {
+    if (!message) {
+        els.connectionStatus.style.display = 'none';
+        return;
+    }
+    els.connectionStatus.textContent = message;
+    els.connectionStatus.className = type;
+    els.connectionStatus.style.display = 'block';
 };
 
 document.addEventListener('visibilitychange', () => {
@@ -585,13 +606,11 @@ document.addEventListener('visibilitychange', () => {
     if (isTabActive && isJoined) poll();
 });
 
-let intervalId = null;
 const startPolling = () => {
     if (intervalId) clearTimeout(intervalId);
     const runPoll = async () => {
         await poll();
-        const delay = isTabActive ? 2000 : 10000;
-        intervalId = setTimeout(runPoll, delay);
+        intervalId = setTimeout(runPoll, pollDelay);
     };
     runPoll();
 };

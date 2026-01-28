@@ -23,6 +23,33 @@ app.use(express.static('public'));
 const sanitize = text => sanitizeHtml(text, { allowedTags: [] });
 const isSuperAdmin = email => ADMIN_EMAIL && email && email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
+// --- Basic Rate Limiting ---
+const rateLimits = new Map();
+const RATE_LIMIT_WINDOW = 60000; // 1 minute
+const MAX_REQUESTS = 100;
+
+const limiter = (req, res, next) => {
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    const now = Date.now();
+    const userLimit = rateLimits.get(ip) || { count: 0, reset: now + RATE_LIMIT_WINDOW };
+
+    if (now > userLimit.reset) {
+        userLimit.count = 1;
+        userLimit.reset = now + RATE_LIMIT_WINDOW;
+    } else {
+        userLimit.count++;
+    }
+
+    rateLimits.set(ip, userLimit);
+
+    if (userLimit.count > MAX_REQUESTS) {
+        return res.status(429).json({ error: 'Too many requests, please try again later.' });
+    }
+    next();
+};
+
+app.use(limiter);
+
 // --- In-Memory Store ---
 class MemoryStore {
     constructor() {
@@ -952,4 +979,32 @@ app.post('/unpin', async (req, res) => {
 });
 
 // Start server
-app.listen(PORT, '0.0.0.0', () => console.log(`🚀 Server running on port ${PORT}`));
+const server = app.listen(PORT, '0.0.0.0', () => console.log(`🚀 Server running on port ${PORT}`));
+
+// --- Global Error Handler ---
+app.use((err, req, res, next) => {
+    console.error('🔥 Global Error:', err.stack);
+    res.status(500).json({ error: 'Something went wrong on our end.' });
+});
+
+// --- Graceful Shutdown ---
+const shutdown = async (signal) => {
+    console.log(`\n🛑 Received ${signal}. Shutting down...`);
+    server.close(async () => {
+        console.log('🚪 Web server closed.');
+        if (store instanceof PostgresStore) {
+            await store.pool.end();
+            console.log('🐘 PostgreSQL pool closed.');
+        }
+        process.exit(0);
+    });
+
+    // Force close after 10s
+    setTimeout(() => {
+        console.error('⚠️ Could not close connections in time, forceful exit.');
+        process.exit(1);
+    }, 10000);
+};
+
+process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => shutdown('SIGTERM'));

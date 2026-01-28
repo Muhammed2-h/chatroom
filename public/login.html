@@ -18,10 +18,6 @@
             --shadow-color: #ccc;
             --input-bg: #fff;
             --tab-inactive: #e0e0e0;
-            --wire: #555;
-            --bulb-off: #e5e5e5;
-            --bulb-on: #ffeb3b;
-            --glow-color: rgba(255, 235, 59, 0.6);
         }
 
         :root.dark {
@@ -35,10 +31,6 @@
             --shadow-color: #0a0a15;
             --input-bg: #1e293b;
             --tab-inactive: #374151;
-            --wire: #888;
-            --bulb-off: #2d2d44;
-            --bulb-on: #4da6ff;
-            --glow-color: rgba(77, 166, 255, 0.5);
         }
 
         * {
@@ -57,144 +49,37 @@
             font-size: 15px;
             color: var(--text-color);
             padding: 20px;
-            transition: background 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.3s;
-            overflow: hidden;
-            touch-action: none;
+            transition: background 0.3s, color 0.3s;
         }
 
-        /* Bulb Physics Elements */
-        .fixture {
+        .theme-toggle {
             position: absolute;
-            top: 0;
-            right: 80px;
-            /* Positioned to the right as is standard for toggles */
-            z-index: 1000;
-        }
-
-        .wire-svg {
-            position: absolute;
-            top: 0;
-            left: -500px;
-            width: 1000px;
-            height: 1000px;
-            pointer-events: none;
-            overflow: visible;
-        }
-
-        #wire-path {
-            fill: none;
-            stroke: var(--wire);
-            stroke-width: 3;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-            transition: stroke 0.3s;
-        }
-
-        .bulb-wrapper {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 80px;
-            height: 120px;
-            margin-left: -40px;
-            z-index: 10;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            will-change: transform;
-            cursor: grab;
-        }
-
-        .bulb-wrapper:active {
-            cursor: grabbing;
-        }
-
-        .cap {
-            width: 30px;
-            height: 30px;
-            border-radius: 4px;
-            background: linear-gradient(90deg, #666 0%, #aaa 50%, #666 100%);
-            border-bottom: 2px solid #555;
-            z-index: 2;
-            position: relative;
-        }
-
-        .cap::after {
-            content: '';
-            position: absolute;
-            top: 5px;
-            left: 0;
-            right: 0;
-            height: 18px;
-            background: repeating-linear-gradient(0deg, transparent, transparent 4px, rgba(0, 0, 0, 0.2) 4px, rgba(0, 0, 0, 0.2) 5px);
-        }
-
-        .bulb {
-            width: 80px;
-            height: 80px;
-            background: var(--bulb-off);
+            top: 20px;
+            right: 20px;
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
             border-radius: 50%;
-            margin-top: -10px;
-            position: relative;
-            box-shadow: inset -5px -5px 10px rgba(0, 0, 0, 0.1);
-            transition: background 0.3s, box-shadow 0.3s;
+            width: 45px;
+            height: 45px;
             display: flex;
             align-items: center;
             justify-content: center;
+            cursor: pointer;
+            box-shadow: 3px 3px 0 var(--shadow-color);
+            font-size: 1.2rem;
+            transition: all 0.2s;
+            z-index: 100;
         }
 
-        .bulb::before {
-            content: '';
-            position: absolute;
-            top: -15px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 30px;
-            height: 20px;
-            background: inherit;
-            z-index: 1;
+        .theme-toggle:hover {
+            transform: scale(1.05);
         }
 
-        .bulb.active {
-            background: var(--bulb-on);
-            box-shadow: 0 0 20px var(--glow-color), 0 0 50px var(--glow-color), 0 0 100px var(--glow-color), inset -5px -5px 10px rgba(255, 255, 255, 0.2);
+        .theme-toggle:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0 var(--shadow-color);
         }
 
-        .filament {
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 30px;
-            height: 30px;
-            border: 2px solid rgba(0, 0, 0, 0.2);
-            border-bottom: none;
-            border-radius: 50% 50% 0 0;
-            opacity: 0.5;
-        }
-
-        .bulb-icon {
-            position: absolute;
-            width: 36px;
-            height: 36px;
-            pointer-events: none;
-            transform-origin: center center;
-            will-change: transform, opacity;
-        }
-
-        .icon-sun {
-            color: #e65100;
-        }
-
-        .icon-moon {
-            color: #4a4a4a;
-        }
-
-        .dark .icon-moon {
-            color: #fff;
-        }
-
-        /* Auth Container Styles */
         .auth-container {
             width: 100%;
             max-width: 400px;
@@ -224,9 +109,8 @@
             background: var(--card-bg);
             border: 2px solid var(--border-color);
             border-radius: 8px;
-            padding: 2.5rem;
-            box-shadow: 8px 8px 0 var(--shadow-color);
-            transition: background 0.4s, border-color 0.4s, box-shadow 0.4s;
+            padding: 2rem;
+            box-shadow: 6px 6px 0 var(--shadow-color);
         }
 
         .tabs {
@@ -247,7 +131,7 @@
             font-weight: 600;
             cursor: pointer;
             text-transform: uppercase;
-            transition: all 0.2s ease;
+            transition: all 0.1s ease;
         }
 
         .tab.active {
@@ -277,7 +161,6 @@
             color: var(--text-color);
             font-size: 1rem;
             font-family: inherit;
-            transition: all 0.3s;
         }
 
         .form-group input:focus {
@@ -297,14 +180,14 @@
             font-weight: 600;
             text-transform: uppercase;
             cursor: pointer;
-            box-shadow: 4px 4px 0 var(--shadow-color);
+            box-shadow: 3px 3px 0 var(--shadow-color);
             transition: all 0.1s ease;
             margin-top: 0.5rem;
         }
 
         .submit-btn:hover {
             transform: translate(1px, 1px);
-            box-shadow: 3px 3px 0 var(--shadow-color);
+            box-shadow: 2px 2px 0 var(--shadow-color);
         }
 
         .submit-btn:active {
@@ -358,45 +241,11 @@
             cursor: pointer;
             font-family: inherit;
         }
-
-        .instruction {
-            position: absolute;
-            bottom: 30px;
-            left: 0;
-            right: 0;
-            text-align: center;
-            color: var(--primary-color);
-            font-family: sans-serif;
-            font-size: 0.85rem;
-            opacity: 0.6;
-            pointer-events: none;
-        }
     </style>
 </head>
 
 <body>
-    <!-- Interactive Physics Bulb -->
-    <div class="fixture">
-        <svg class="wire-svg">
-            <path id="wire-path" />
-        </svg>
-        <div class="bulb-wrapper" id="bulb-switch">
-            <div class="cap"></div>
-            <div class="bulb" id="bulb">
-                <div class="filament"></div>
-                <!-- Icons -->
-                <svg class="bulb-icon icon-moon" id="icon-moon" viewBox="0 0 24 24" fill="currentColor">
-                    <path fill-rule="evenodd"
-                        d="M9.528 1.718a.75.75 0 01.162.819A8.97 8.97 0 009 6a9 9 0 009 9 8.97 8.97 0 003.463-.69.75.75 0 01.981.98 10.503 10.503 0 01-9.694 6.46c-5.799 0-10.5-4.701-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 01.818.162z"
-                        clip-rule="evenodd" />
-                </svg>
-                <svg class="bulb-icon icon-sun" id="icon-sun" viewBox="0 0 24 24" fill="currentColor">
-                    <path
-                        d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 10-1.061 1.06l1.59 1.591zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.758 17.303a.75.75 0 00-1.061-1.06l-1.591 1.59a.75.75 0 001.06 1.061l1.591-1.59zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12zM6.697 7.757a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 00-1.061 1.06l1.59 1.591z" />
-                </svg>
-            </div>
-        </div>
-    </div>
+    <button class="theme-toggle" id="theme-toggle" title="Toggle theme">🌞</button>
 
     <div class="auth-container">
         <div class="logo">
@@ -448,183 +297,23 @@
         </div>
     </div>
 
-    <div class="instruction">Pull the bulb down to switch theme</div>
-
     <script>
-        // DOM Elements
-        const el = {
-            switch: document.getElementById('bulb-switch'),
-            wire: document.getElementById('wire-path'),
-            bulb: document.getElementById('bulb'),
-            body: document.body,
-            iconMoon: document.getElementById('icon-moon'),
-            iconSun: document.getElementById('icon-sun')
-        };
-
-        // Constants for Physics (adapted for layout)
-        const CFG = { REST: 150, K: 0.08, DAMP: 0.92, GRAVITY: 0.6, TOGGLE: 260, ATTACH: { x: 500, y: 0 } };
-
-        // Application State
-        const state = {
-            dark: localStorage.getItem('darkMode') === 'true',
-            pos: { x: 0, y: CFG.REST },
-            vel: { x: 0, y: 0 },
-            drag: { active: false, offX: 0, offY: 0 },
-            toggledThisPull: false,
-            wave: { amp: 0, phase: 0, decay: 0.95 }
-        };
-
-        // Audio System
-        const audio = new (window.AudioContext || window.webkitAudioContext)();
-        const playSound = (isOn) => {
-            if (audio.state === 'suspended') audio.resume();
-            const osc = audio.createOscillator(), gain = audio.createGain();
-            const freq = isOn ? 800 : 400;
-
-            osc.frequency.setValueAtTime(freq, audio.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(100, audio.currentTime + 0.1);
-            gain.gain.setValueAtTime(0.1, audio.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audio.currentTime + 0.1);
-
-            osc.connect(gain).connect(audio.destination);
-            osc.start(); osc.stop(audio.currentTime + 0.15);
-        };
-
-        // Theme Toggle Logic
-        function updateThemeElements() {
-            el.body.classList.toggle('dark', state.dark);
-            el.bulb.classList.toggle('active', !state.dark); // Active = Light mode (Yellow)
-            localStorage.setItem('darkMode', state.dark);
-        }
-
-        function toggleMode() {
-            state.dark = !state.dark;
-            updateThemeElements();
-            playSound(!state.dark);
-        }
-
-        // Input Handling
-        const getPointer = (e) => {
-            const t = e.touches ? e.touches[0] : e;
-            const fixtureRect = document.querySelector('.fixture').getBoundingClientRect();
-            // X relative to the fixture point
-            return { x: t.clientX - fixtureRect.left, y: t.clientY };
-        };
-
-        function startDrag(e) {
-            e.preventDefault();
-            state.drag.active = true;
-            state.toggledThisPull = false;
-            state.vel = { x: 0, y: 0 };
-            state.wave.amp = 0;
-
-            const p = getPointer(e);
-            state.drag.offX = state.pos.x - p.x;
-            state.drag.offY = state.pos.y - p.y;
-            if (audio.state === 'suspended') audio.resume();
-        }
-
-        function handleDrag(e) {
-            if (!state.drag.active) return;
-            e.preventDefault();
-            const p = getPointer(e);
-            const prev = { ...state.pos };
-
-            state.pos.x = p.x + state.drag.offX;
-            state.pos.y = Math.max(50, p.y + state.drag.offY);
-
-            state.vel.x = state.pos.x - prev.x;
-            state.vel.y = state.pos.y - prev.y;
-
-            if (state.pos.y > CFG.TOGGLE && !state.toggledThisPull) {
-                toggleMode();
-                state.toggledThisPull = true;
-            } else if (state.pos.y < CFG.TOGGLE - 50) {
-                state.toggledThisPull = false;
+        // Theme initialization
+        const initTheme = () => {
+            const isDark = localStorage.getItem('darkMode') === 'true';
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+                document.getElementById('theme-toggle').textContent = '🌙';
             }
-        }
+        };
+        initTheme();
 
-        function endDrag() {
-            if (!state.drag.active) return;
-            state.drag.active = false;
-            state.toggledThisPull = false;
-            const dist = Math.hypot(state.pos.x, state.pos.y);
-            state.wave.amp = Math.abs(dist - CFG.REST) * 0.5;
-        }
-
-        // Event Listeners
-        ['mousedown', 'touchstart'].forEach(ev => {
-            window.addEventListener(ev, e => e.target.closest('#bulb-switch') && startDrag(e), { passive: false });
+        document.getElementById('theme-toggle').addEventListener('click', () => {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('darkMode', isDark);
+            document.getElementById('theme-toggle').textContent = isDark ? '🌙' : '🌞';
         });
-        window.addEventListener('mousemove', handleDrag, { passive: false });
-        window.addEventListener('touchmove', handleDrag, { passive: false });
-        window.addEventListener('mouseup', endDrag);
-        window.addEventListener('touchend', endDrag);
 
-        // Physics Loop
-        function loop() {
-            if (!state.drag.active) {
-                state.vel.y += CFG.GRAVITY;
-                const currLen = Math.hypot(state.pos.x, state.pos.y);
-                if (currLen > 0) {
-                    const force = CFG.K * (currLen - CFG.REST);
-                    state.vel.x -= (state.pos.x / currLen) * force;
-                    state.vel.y -= (state.pos.y / currLen) * force;
-                }
-                state.vel.x *= CFG.DAMP; state.vel.y *= CFG.DAMP;
-                state.pos.x += state.vel.x; state.pos.y += state.vel.y;
-            }
-
-            el.switch.style.transform = `translate(${state.pos.x}px, ${state.pos.y}px)`;
-
-            // Wire Animation
-            state.wave.amp *= state.wave.decay;
-            state.wave.phase += 0.8;
-            const sx = CFG.ATTACH.x, sy = CFG.ATTACH.y;
-            const ex = sx + state.pos.x, ey = state.pos.y;
-            const dx = ex - sx, dy = ey - sy;
-            const len = Math.hypot(dx, dy);
-            const nx = -dy / len, ny = dx / len;
-            let d = `M${sx},${sy}`;
-            for (let i = 1; i <= 20; i++) {
-                const t = i / 20;
-                const wave = Math.sin(t * 10 + state.wave.phase) * state.wave.amp * Math.sin(t * Math.PI);
-                d += ` L${sx + dx * t + nx * wave},${sy + dy * t + ny * wave}`;
-            }
-            el.wire.setAttribute('d', d);
-
-            // Icon Scrubbing
-            let ratio = Math.max(0, (state.pos.y - CFG.REST) / (CFG.TOGGLE - CFG.REST));
-            if (ratio > 1.2) ratio = 1.2;
-
-            let p; // 0=Moon, 1=Sun
-            if (state.toggledThisPull) {
-                p = state.dark ? 0 : 1;
-            } else {
-                p = state.dark ? ratio : 1 - ratio;
-            }
-            p = Math.max(0, Math.min(1, p));
-
-            const moonOp = 1 - p;
-            const moonScale = 0.2 + (moonOp * 0.8);
-            const moonRot = p * 180;
-            const sunOp = p;
-            const sunScale = 0.2 + (sunOp * 0.8);
-            const sunRot = (p - 1) * 180;
-
-            el.iconMoon.style.transform = `translate(-50%, -50%) rotate(${moonRot}deg) scale(${moonScale})`;
-            el.iconMoon.style.opacity = moonOp;
-            el.iconSun.style.transform = `translate(-50%, -50%) rotate(${sunRot}deg) scale(${sunScale})`;
-            el.iconSun.style.opacity = sunOp;
-
-            requestAnimationFrame(loop);
-        }
-
-        // Init
-        updateThemeElements();
-        loop();
-
-        // Standard Auth JS
         const authToken = localStorage.getItem('authToken');
         if (authToken) {
             fetch('/auth/me', { headers: { 'Authorization': `Bearer ${authToken}` } })
@@ -632,6 +321,7 @@
                 .catch(() => { });
         }
 
+        // Tabs
         document.querySelectorAll('.tab').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -648,10 +338,12 @@
             el.classList.add('show');
         };
 
+        // Forms
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
+
             try {
                 const res = await fetch('/auth/login', {
                     method: 'POST',
@@ -660,6 +352,7 @@
                 });
                 const data = await res.json();
                 if (!res.ok) return showError(data.error || 'Login failed');
+
                 localStorage.setItem('authToken', data.authToken);
                 localStorage.setItem('displayName', data.displayName);
                 window.location.href = '/chat.html';
@@ -671,6 +364,7 @@
             const displayName = document.getElementById('register-name').value;
             const email = document.getElementById('register-email').value;
             const password = document.getElementById('register-password').value;
+
             try {
                 const res = await fetch('/auth/register', {
                     method: 'POST',
@@ -679,6 +373,7 @@
                 });
                 const data = await res.json();
                 if (!res.ok) return showError(data.error || 'Registration failed');
+
                 localStorage.setItem('authToken', data.authToken);
                 localStorage.setItem('displayName', data.displayName);
                 window.location.href = '/chat.html';

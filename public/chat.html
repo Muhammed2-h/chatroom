@@ -660,6 +660,37 @@
 		body {
 			padding-top: 50px !important;
 		}
+
+		/* Connection Status Banner */
+		#connection-status {
+			position: fixed;
+			top: 50px;
+			left: 0;
+			right: 0;
+			background: #f59e0b;
+			color: white;
+			text-align: center;
+			padding: 4px 8px;
+			font-size: 0.8em;
+			font-weight: 600;
+			z-index: 900;
+			display: none;
+			animation: slideDown 0.3s ease-out;
+		}
+
+		#connection-status.error {
+			background: #ef4444;
+		}
+
+		@keyframes slideDown {
+			from {
+				transform: translateY(-100%);
+			}
+
+			to {
+				transform: translateY(0);
+			}
+		}
 	</style>
 </head>
 
@@ -677,6 +708,9 @@
 			<button id="signout-btn">Sign Out</button>
 		</div>
 	</div>
+
+	<!-- Connection Status -->
+	<div id="connection-status">Connecting...</div>
 
 	<!-- Settings Modal -->
 	<div class="settings-modal" id="settings-modal">
