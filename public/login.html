@@ -18,6 +18,7 @@
             --shadow-color: #ccc;
             --input-bg: #fff;
             --tab-inactive: #e0e0e0;
+            --bulb-glow: rgba(255, 255, 0, 0);
         }
 
         :root.dark {
@@ -31,6 +32,7 @@
             --shadow-color: #0a0a15;
             --input-bg: #1e293b;
             --tab-inactive: #374151;
+            --bulb-glow: rgba(77, 166, 255, 0.3);
         }
 
         * {
@@ -49,35 +51,24 @@
             font-size: 15px;
             color: var(--text-color);
             padding: 20px;
-            transition: background 0.3s, color 0.3s;
+            transition: background 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.3s;
+            overflow: hidden;
         }
 
-        .theme-toggle {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: var(--card-bg);
-            border: 2px solid var(--border-color);
-            border-radius: 50%;
-            width: 45px;
-            height: 45px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: 3px 3px 0 var(--shadow-color);
-            font-size: 1.2rem;
-            transition: all 0.2s;
-            z-index: 100;
+        #bulb-container {
+            position: fixed;
+            top: -20px;
+            right: 60px;
+            width: 80px;
+            height: 500px;
+            z-index: 1000;
+            cursor: grab;
+            user-select: none;
+            touch-action: none;
         }
 
-        .theme-toggle:hover {
-            transform: scale(1.05);
-        }
-
-        .theme-toggle:active {
-            transform: translate(2px, 2px);
-            box-shadow: 1px 1px 0 var(--shadow-color);
+        #bulb-container:active {
+            cursor: grabbing;
         }
 
         .auth-container {
@@ -109,8 +100,9 @@
             background: var(--card-bg);
             border: 2px solid var(--border-color);
             border-radius: 8px;
-            padding: 2rem;
-            box-shadow: 6px 6px 0 var(--shadow-color);
+            padding: 2.5rem;
+            box-shadow: 8px 8px 0 var(--shadow-color);
+            transition: background 0.4s, border-color 0.4s, box-shadow 0.4s;
         }
 
         .tabs {
@@ -131,7 +123,7 @@
             font-weight: 600;
             cursor: pointer;
             text-transform: uppercase;
-            transition: all 0.1s ease;
+            transition: all 0.2s ease;
         }
 
         .tab.active {
@@ -161,11 +153,13 @@
             color: var(--text-color);
             font-size: 1rem;
             font-family: inherit;
+            transition: all 0.3s;
         }
 
         .form-group input:focus {
             outline: none;
             border-color: var(--accent-h1);
+            box-shadow: 0 0 0 4px rgba(0, 102, 204, 0.1);
         }
 
         .submit-btn {
@@ -180,14 +174,14 @@
             font-weight: 600;
             text-transform: uppercase;
             cursor: pointer;
-            box-shadow: 3px 3px 0 var(--shadow-color);
+            box-shadow: 4px 4px 0 var(--shadow-color);
             transition: all 0.1s ease;
             margin-top: 0.5rem;
         }
 
         .submit-btn:hover {
             transform: translate(1px, 1px);
-            box-shadow: 2px 2px 0 var(--shadow-color);
+            box-shadow: 3px 3px 0 var(--shadow-color);
         }
 
         .submit-btn:active {
@@ -241,11 +235,97 @@
             cursor: pointer;
             font-family: inherit;
         }
+
+        /* Bulb Styles */
+        #bulb-svg {
+            overflow: visible;
+        }
+
+        .wire-path {
+            fill: none;
+            stroke: var(--border-color);
+            stroke-width: 2.5;
+            stroke-linecap: round;
+        }
+
+        .bulb-glass {
+            fill: var(--card-bg);
+            stroke: var(--border-color);
+            stroke-width: 2.5;
+            transition: fill 0.3s;
+        }
+
+        .bulb-socket {
+            fill: #94a3b8;
+            stroke: var(--border-color);
+            stroke-width: 1.5;
+        }
+
+        .glow {
+            fill: var(--bulb-glow);
+            filter: blur(15px);
+            pointer-events: none;
+        }
     </style>
 </head>
 
 <body>
-    <button class="theme-toggle" id="theme-toggle" title="Toggle theme">🌞</button>
+    <!-- Physics-based Lightbulb Toggle -->
+    <div id="bulb-container">
+        <svg id="bulb-svg" width="80" height="500" viewBox="0 0 80 500">
+            <defs>
+                <radialGradient id="bulbGradient" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="white" stop-opacity="0.2" />
+                    <stop offset="100%" stop-color="white" stop-opacity="0" />
+                </radialGradient>
+            </defs>
+            <circle id="glow-circle" class="glow" cx="40" cy="180" r="40" />
+            <path id="wire" class="wire-path" d="M40,0 L40,150" />
+            <g id="bulb-group">
+                <!-- Socket -->
+                <rect x="30" y="145" width="20" height="15" rx="2" class="bulb-socket" />
+                <rect x="32" y="155" width="16" height="5" rx="1" class="bulb-socket" />
+                <!-- Bulb Body -->
+                <path class="bulb-glass" d="M40,160 
+                          c-12,0 -22,10 -22,22 
+                          0,12 8,20 10,25 
+                          l0,8 a3,3 0 0,0 3,3 
+                          l18,0 a3,3 0 0,0 3,-3 
+                          l0,-8 
+                          c2,-5 10,-13 10,-25 
+                          0,-12 -10,-22 -22,-22z" />
+                <!-- Rolling Icons Container -->
+                <g id="icon-scrubber" transform="translate(40, 182)">
+                    <!-- Sun -->
+                    <g id="sun-icon">
+                        <circle cx="0" cy="0" r="6" fill="var(--accent-h1)" />
+                        <g id="rays">
+                            <line x1="0" y1="-9" x2="0" y2="-12" stroke="var(--accent-h1)" stroke-width="2"
+                                stroke-linecap="round" />
+                            <line x1="0" y1="9" x2="0" y2="12" stroke="var(--accent-h1)" stroke-width="2"
+                                stroke-linecap="round" />
+                            <line x1="-9" y1="0" x2="-12" y2="0" stroke="var(--accent-h1)" stroke-width="2"
+                                stroke-linecap="round" />
+                            <line x1="9" y1="0" x2="12" y2="0" stroke="var(--accent-h1)" stroke-width="2"
+                                stroke-linecap="round" />
+                            <line x1="-6.5" y1="-6.5" x2="-8.5" y2="-8.5" stroke="var(--accent-h1)" stroke-width="2"
+                                stroke-linecap="round" />
+                            <line x1="6.5" y1="6.5" x2="8.5" y2="8.5" stroke="var(--accent-h1)" stroke-width="2"
+                                stroke-linecap="round" />
+                            <line x1="-6.5" y1="6.5" x2="-8.5" y2="8.5" stroke="var(--accent-h1)" stroke-width="2"
+                                stroke-linecap="round" />
+                            <line x1="6.5" y1="-6.5" x2="8.5" y2="-8.5" stroke="var(--accent-h1)" stroke-width="2"
+                                stroke-linecap="round" />
+                        </g>
+                    </g>
+                    <!-- Moon -->
+                    <g id="moon-icon">
+                        <path d="M-5,-5 a8,8 0 1,0 12,12 a6,6 0 0,1 -12,-12" fill="var(--accent-h1)" />
+                    </g>
+                </g>
+            </g>
+        </svg>
+    </div>
 
     <div class="auth-container">
         <div class="logo">
@@ -298,22 +378,172 @@
     </div>
 
     <script>
-        // Theme initialization
-        const initTheme = () => {
-            const isDark = localStorage.getItem('darkMode') === 'true';
-            if (isDark) {
-                document.documentElement.classList.add('dark');
-                document.getElementById('theme-toggle').textContent = '🌙';
-            }
-        };
-        initTheme();
+        // Audio Logic
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playClick(isUp) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
 
-        document.getElementById('theme-toggle').addEventListener('click', () => {
-            const isDark = document.documentElement.classList.toggle('dark');
-            localStorage.setItem('darkMode', isDark);
-            document.getElementById('theme-toggle').textContent = isDark ? '🌙' : '🌞';
+            const freq = isUp ? 800 : 400;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(freq / 2, audioCtx.currentTime + 0.1);
+
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.1);
+
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.1);
+        }
+
+        // Physics Logic
+        const container = document.getElementById('bulb-container');
+        const wirePath = document.getElementById('wire');
+        const bulbGroup = document.getElementById('bulb-group');
+        const glow = document.getElementById('glow-circle');
+        const sun = document.getElementById('sun-icon');
+        const moon = document.getElementById('moon-icon');
+
+        const NUM_POINTS = 10;
+        const WIRE_LENGTH = 160;
+        const SEGMENT_LEN = WIRE_LENGTH / NUM_POINTS;
+        let points = [];
+        let isDragging = false;
+        let startY = 0;
+        let currentY = 0;
+        let isDarkMode = localStorage.getItem('darkMode') === 'true';
+
+        for (let i = 0; i < NUM_POINTS; i++) {
+            points.push({ x: 40, y: i * SEGMENT_LEN, oldX: 40, oldY: i * SEGMENT_LEN });
+        }
+
+        function updatePhysics() {
+            const gravity = 0.5;
+            const damping = 0.98;
+
+            // Verlet Integration
+            for (let i = 1; i < NUM_POINTS; i++) {
+                const p = points[i];
+                const vx = (p.x - p.oldX) * damping;
+                const vy = (p.y - p.oldY) * damping;
+
+                p.oldX = p.x;
+                p.oldY = p.y;
+                p.x += vx;
+                p.y += vy + gravity;
+            }
+
+            // Constraints
+            for (let j = 0; j < 5; j++) {
+                points[0].x = 40;
+                points[0].y = 0;
+
+                if (isDragging) {
+                    const last = points[NUM_POINTS - 1];
+                    last.x = 40; // Keep horizontal mostly stable during direct pull
+                    last.y = Math.max(160, 160 + (currentY - startY));
+                }
+
+                for (let i = 0; i < NUM_POINTS - 1; i++) {
+                    const p1 = points[i];
+                    const p2 = points[i + 1];
+                    const dx = p2.x - p1.x;
+                    const dy = p2.y - p1.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    const diff = (dist - SEGMENT_LEN) / dist;
+                    const offsetX = dx * 0.5 * diff;
+                    const offsetY = dy * 0.5 * diff;
+
+                    if (i > 0) {
+                        p1.x += offsetX;
+                        p1.y += offsetY;
+                    }
+                    p2.x -= offsetX;
+                    p2.y -= offsetY;
+                }
+            }
+
+            // Draw Wire
+            let d = `M ${points[0].x},${points[0].y}`;
+            for (let i = 1; i < NUM_POINTS; i++) {
+                const p = points[i];
+                // Smooth curve through points
+                const prev = points[i - 1];
+                const cx = (prev.x + p.x) / 2;
+                const cy = (prev.y + p.y) / 2;
+                if (i === 1) d += ` Q ${prev.x},${prev.y} ${cx},${cy}`;
+                else d += ` T ${cx},${cy}`;
+            }
+            d += ` L ${points[NUM_POINTS - 1].x},${points[NUM_POINTS - 1].y}`;
+            wirePath.setAttribute('d', d);
+
+            // Position Bulb
+            const last = points[NUM_POINTS - 1];
+            bulbGroup.setAttribute('transform', `translate(${last.x - 40}, ${last.y - 160})`);
+            glow.setAttribute('cx', last.x);
+            glow.setAttribute('cy', last.y + 22);
+
+            // Scrubbing Animation Logic
+            const pullDistance = isDragging ? Math.max(0, currentY - startY) : 0;
+            const threshold = 80;
+            const progress = Math.min(1, pullDistance / threshold);
+
+            // Interaction logic: if pull is 1.0, and state is X, we show transition to Y
+            // But we want "rolling" scrubbing.
+            const t = isDarkMode ? 1 - progress : progress;
+
+            // Sun: active when t=0 (light mode)
+            sun.setAttribute('transform', `rotate(${(t) * 180}) scale(${1 - t})`);
+            sun.setAttribute('opacity', 1 - t);
+
+            // Moon: active when t=1 (dark mode)
+            moon.setAttribute('transform', `rotate(${(t - 1) * 180}) scale(${t})`);
+            moon.setAttribute('opacity', t);
+
+            requestAnimationFrame(updatePhysics);
+        }
+
+        // Pointer Events
+        container.addEventListener('pointerdown', (e) => {
+            isDragging = true;
+            startY = e.clientY;
+            currentY = e.clientY;
+            container.setPointerCapture(e.pointerId);
+            if (audioCtx.state === 'suspended') audioCtx.resume();
         });
 
+        window.addEventListener('pointermove', (e) => {
+            if (!isDragging) return;
+            currentY = e.clientY;
+        });
+
+        window.addEventListener('pointerup', (e) => {
+            if (!isDragging) return;
+            const pullDistance = currentY - startY;
+            if (pullDistance > 80) {
+                isDarkMode = !isDarkMode;
+                toggleTheme(isDarkMode);
+                playClick(isDarkMode);
+            }
+            isDragging = false;
+        });
+
+        function toggleTheme(dark) {
+            document.documentElement.classList.toggle('dark', dark);
+            localStorage.setItem('darkMode', dark);
+        }
+
+        function initTheme() {
+            if (isDarkMode) {
+                document.documentElement.classList.add('dark');
+            }
+            updatePhysics();
+        }
+
+        initTheme();
+
+        // Standard Auth JS
         const authToken = localStorage.getItem('authToken');
         if (authToken) {
             fetch('/auth/me', { headers: { 'Authorization': `Bearer ${authToken}` } })
@@ -321,7 +551,6 @@
                 .catch(() => { });
         }
 
-        // Tabs
         document.querySelectorAll('.tab').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -338,12 +567,10 @@
             el.classList.add('show');
         };
 
-        // Forms
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
-
             try {
                 const res = await fetch('/auth/login', {
                     method: 'POST',
@@ -352,7 +579,6 @@
                 });
                 const data = await res.json();
                 if (!res.ok) return showError(data.error || 'Login failed');
-
                 localStorage.setItem('authToken', data.authToken);
                 localStorage.setItem('displayName', data.displayName);
                 window.location.href = '/chat.html';
@@ -364,7 +590,6 @@
             const displayName = document.getElementById('register-name').value;
             const email = document.getElementById('register-email').value;
             const password = document.getElementById('register-password').value;
-
             try {
                 const res = await fetch('/auth/register', {
                     method: 'POST',
@@ -373,7 +598,6 @@
                 });
                 const data = await res.json();
                 if (!res.ok) return showError(data.error || 'Registration failed');
-
                 localStorage.setItem('authToken', data.authToken);
                 localStorage.setItem('displayName', data.displayName);
                 window.location.href = '/chat.html';
