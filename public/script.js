@@ -163,6 +163,7 @@ const setupUserBar = () => {
         }
         localStorage.removeItem('authToken');
         localStorage.removeItem('displayName');
+        localStorage.removeItem('guestName'); // Clear guest session
         window.location.href = '/login.html';
     });
 };
