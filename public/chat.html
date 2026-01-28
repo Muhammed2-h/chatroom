@@ -138,6 +138,28 @@
             font-family: 'Courier New', monospace;
             font-weight: bold;
             box-shadow: 3px 3px 0 var(--shadow-color);
+            box-sizing: border-box;
+        }
+
+        #room-selection button {
+            width: 100%;
+            padding: 0.9em 0;
+            margin-top: 10px;
+            font-size: 1em;
+            background: #e0e0e0;
+            color: #333;
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            box-shadow: 3px 3px 0 var(--shadow-color);
+            box-sizing: border-box;
+            cursor: pointer;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+        }
+
+        #room-selection button:active {
+            box-shadow: 1px 1px 0 var(--shadow-color);
+            transform: translate(2px, 2px);
         }
 
         #room-selection input:focus {
@@ -571,6 +593,32 @@
         form input:focus {
             outline: none;
             border-color: var(--accent-h1);
+        }
+
+        #room-selection button {
+            padding: 0.8em 0;
+            /* Adjusted padding for 100% width */
+            width: 100%;
+            font-size: 1em;
+            background: #000080;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            /* Consistent with input */
+            box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.3);
+            box-sizing: border-box;
+            /* Prevent overflow */
+            cursor: pointer;
+        }
+
+        .dark #room-selection button {
+            background: #4da6ff;
+            color: #000;
+        }
+
+        #room-selection button:active {
+            box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.3);
+            transform: translate(2px, 2px);
         }
 
         button#action-btn {
