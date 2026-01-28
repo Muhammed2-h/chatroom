@@ -6,6 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="description" content="RoundChat - Secure, lightning-fast real-time chat with modern retro aesthetics.">
     <title>RoundChat - Connecting people instantly</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-color: #f5f7fa;
@@ -46,14 +49,14 @@
             height: -webkit-fill-available;
             box-sizing: border-box;
             margin: 0;
-            padding: 0.8em;
-            font-family: 'Geneva', 'Verdana', sans-serif;
+            padding: 0.5em;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
             font-size: 15px;
             color: var(--text-color);
             display: flex;
             flex-direction: column;
             background: var(--bg-color);
-            gap: 0.5em;
+            gap: 0.4em;
             transition: background 0.3s, color 0.3s;
         }
 
@@ -167,11 +170,11 @@
 
         h1 {
             margin: 0;
-            font-size: 1.25em;
+            font-size: 1.1em;
             flex-grow: 1;
-            font-family: 'Courier New', monospace;
             font-weight: 700;
             color: var(--accent-h1);
+            letter-spacing: -0.5px;
         }
 
         .room-info {
@@ -570,14 +573,22 @@
             top: 0;
             left: 0;
             right: 0;
-            background: rgba(0, 0, 0, 0.85);
-            color: white;
-            padding: 10px 16px;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            color: var(--text-color);
+            padding: 8px 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 0.9em;
+            font-size: 0.85em;
             z-index: 1000;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .dark .user-bar {
+            background: rgba(15, 23, 42, 0.7);
+            color: white;
         }
 
         .user-bar .user-info {
