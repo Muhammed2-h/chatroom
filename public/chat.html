@@ -42,6 +42,7 @@
             margin: 0;
             padding: 0;
             height: 100%;
+            background: var(--bg-color); /* Fix overscroll color */
         }
 
         body {
@@ -49,7 +50,7 @@
             height: -webkit-fill-available;
             box-sizing: border-box;
             margin: 0;
-            padding: 0.5em;
+            padding: 0.5em; /* 0.5em all around, but top padded by user-bar via padding-top below? */
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
             font-size: 15px;
             color: var(--text-color);
@@ -668,8 +669,8 @@
             top: 0;
             left: 0;
             right: 0;
-            background: #000;
-            color: white;
+            background: var(--header-bg); /* Adaptive background */
+            color: var(--text-color);
             padding: 6px 16px;
             display: flex;
             justify-content: space-between;
@@ -678,6 +679,8 @@
             z-index: 1000;
             border-bottom: 2px solid var(--border-color);
             font-family: 'Courier New', monospace;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
         }
 
         .dark .user-bar {
@@ -714,14 +717,16 @@
 
         .user-bar button {
             background: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
             padding: 6px 12px;
             font-size: 0.85em;
+            border-radius: 4px;
         }
 
         .user-bar button:hover {
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--accent-ui);
+            color: var(--accent-h1);
         }
 
         /* Settings button */
