@@ -130,13 +130,22 @@ const setupUserBar = () => {
     const loggedInBadge = $('logged-in-badge');
     const signoutBtn = $('signout-btn');
 
+    const guestName = localStorage.getItem('guestName');
+
     if (savedDisplayName && authToken) {
         userDisplayName.textContent = savedDisplayName;
         guestBadge.style.display = 'none';
         loggedInBadge.style.display = 'inline';
         if (els.nameInput) els.nameInput.value = savedDisplayName;
+    } else if (guestName) {
+        userDisplayName.textContent = guestName;
+        guestBadge.textContent = 'Returned Guest';
+        guestBadge.style.display = 'inline';
+        loggedInBadge.style.display = 'none';
+        if (els.nameInput) els.nameInput.value = guestName;
     } else {
         userDisplayName.textContent = 'Guest';
+        guestBadge.textContent = 'Guest';
         guestBadge.style.display = 'inline';
         loggedInBadge.style.display = 'none';
     }
@@ -185,8 +194,10 @@ const initJoinMode = () => {
 
         // Auto-join World Chat if name exists
         const nameVal = els.nameInput.value.trim();
-        if (nameVal && (authToken || savedDisplayName)) {
-            setTimeout(() => els.form.dispatchEvent(new Event('submit')), 100);
+        if (nameVal && (authToken || localStorage.getItem('guestName'))) {
+            setTimeout(() => {
+                if (!isJoined) els.form.dispatchEvent(new Event('submit'));
+            }, 100);
         }
     } else {
         els.mainInput.style.display = 'block';
@@ -204,6 +215,10 @@ const initJoinMode = () => {
 const switchToChatMode = () => {
     isJoined = true;
     myUsername = els.nameInput.value.trim();
+    if (!authToken) {
+        localStorage.setItem('guestName', myUsername);
+        setupUserBar(); // Refresh badges
+    }
     Object.assign(els.mainInput, {
         style: { display: 'block' }, type: 'text', name: 'content',
         placeholder: 'Message', value: ''

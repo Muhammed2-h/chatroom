@@ -621,12 +621,11 @@ store.init().catch(e => {
 
 app.post('/auth/register', async (req, res) => {
     try {
-        const { email, displayName } = req.body;
+        const { email, displayName, password } = req.body;
 
-        if (!email || !displayName) {
-            return res.status(400).json({ error: 'Email and display name are required' });
+        if (!email || !displayName || !password) {
+            return res.status(400).json({ error: 'All fields are required' });
         }
-
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
             return res.status(400).json({ error: 'Invalid email format' });
