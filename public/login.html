@@ -9,12 +9,28 @@
     <style>
         :root {
             --bg-color: #f0f0eb;
-            --chat-bg: #fff;
+            --card-bg: #fff;
             --primary-color: #555;
             --text-color: #2b2b2b;
             --border-color: #888;
             --accent-h1: #000080;
             --accent-ui: #e8e8e8;
+            --shadow-color: #ccc;
+            --input-bg: #fff;
+            --tab-inactive: #e0e0e0;
+        }
+
+        :root.dark {
+            --bg-color: #1a1a2e;
+            --card-bg: #16213e;
+            --primary-color: #aaa;
+            --text-color: #e0e0e0;
+            --border-color: #444;
+            --accent-h1: #4da6ff;
+            --accent-ui: #2a2a4a;
+            --shadow-color: #0a0a15;
+            --input-bg: #1e293b;
+            --tab-inactive: #374151;
         }
 
         * {
@@ -33,11 +49,41 @@
             font-size: 15px;
             color: var(--text-color);
             padding: 20px;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 3px 3px 0 var(--shadow-color);
+            font-size: 1.2rem;
+            transition: all 0.2s;
+            z-index: 100;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.05);
+        }
+
+        .theme-toggle:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0 var(--shadow-color);
         }
 
         .auth-container {
             width: 100%;
             max-width: 400px;
+            position: relative;
         }
 
         .logo {
@@ -49,22 +95,22 @@
             font-family: 'Courier New', monospace;
             font-size: 2.2rem;
             font-weight: 700;
-            color: #444;
-            text-shadow: 2px 2px 0 #ccc;
+            color: var(--accent-h1);
+            text-shadow: 2px 2px 0 var(--shadow-color);
         }
 
         .logo p {
-            color: #666;
+            color: var(--primary-color);
             font-size: 0.95rem;
             margin-top: 0.4rem;
         }
 
         .auth-card {
-            background: #fff;
-            border: 2px solid #333;
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
             border-radius: 8px;
             padding: 2rem;
-            box-shadow: 6px 6px 0 #ccc;
+            box-shadow: 6px 6px 0 var(--shadow-color);
         }
 
         .tabs {
@@ -76,10 +122,10 @@
         .tab {
             flex: 1;
             padding: 10px;
-            border: 1px solid #999;
+            border: 1px solid var(--border-color);
             border-radius: 4px;
-            background: #e0e0e0;
-            color: #333;
+            background: var(--tab-inactive);
+            color: var(--text-color);
             font-family: inherit;
             font-size: 0.85rem;
             font-weight: 600;
@@ -89,9 +135,9 @@
         }
 
         .tab.active {
-            background: #000080;
+            background: var(--accent-h1);
             color: white;
-            border-color: #000080;
+            border-color: var(--accent-h1);
         }
 
         .form-group {
@@ -103,22 +149,23 @@
             margin-bottom: 0.4rem;
             font-size: 0.85rem;
             font-weight: 600;
-            color: #444;
+            color: var(--primary-color);
         }
 
         .form-group input {
             width: 100%;
             padding: 12px;
-            border: 2px solid #555;
+            border: 2px solid var(--border-color);
             border-radius: 6px;
-            background: #fff;
+            background: var(--input-bg);
+            color: var(--text-color);
             font-size: 1rem;
             font-family: inherit;
         }
 
         .form-group input:focus {
             outline: none;
-            border-color: #000080;
+            border-color: var(--accent-h1);
         }
 
         .submit-btn {
@@ -126,26 +173,26 @@
             padding: 14px;
             border: none;
             border-radius: 4px;
-            background: #000080;
+            background: var(--accent-h1);
             color: white;
             font-size: 1rem;
             font-family: inherit;
             font-weight: 600;
             text-transform: uppercase;
             cursor: pointer;
-            box-shadow: 3px 3px 0 #444;
+            box-shadow: 3px 3px 0 var(--shadow-color);
             transition: all 0.1s ease;
             margin-top: 0.5rem;
         }
 
         .submit-btn:hover {
             transform: translate(1px, 1px);
-            box-shadow: 2px 2px 0 #444;
+            box-shadow: 2px 2px 0 var(--shadow-color);
         }
 
         .submit-btn:active {
             transform: translate(2px, 2px);
-            box-shadow: 1px 1px 0 #444;
+            box-shadow: 1px 1px 0 var(--shadow-color);
         }
 
         .error-message {
@@ -159,6 +206,12 @@
             font-weight: 600;
             display: none;
             text-align: center;
+        }
+
+        .dark .error-message {
+            background: #450a0a;
+            border-color: #991b1b;
+            color: #fca5a5;
         }
 
         .error-message.show {
@@ -183,7 +236,7 @@
         .guest-link button {
             background: none;
             border: none;
-            color: #666;
+            color: var(--primary-color);
             text-decoration: underline;
             cursor: pointer;
             font-family: inherit;
@@ -192,6 +245,8 @@
 </head>
 
 <body>
+    <button class="theme-toggle" id="theme-toggle" title="Toggle theme">🌞</button>
+
     <div class="auth-container">
         <div class="logo">
             <h1>💬 RoundChat</h1>
@@ -243,6 +298,22 @@
     </div>
 
     <script>
+        // Theme initialization
+        const initTheme = () => {
+            const isDark = localStorage.getItem('darkMode') === 'true';
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+                document.getElementById('theme-toggle').textContent = '🌙';
+            }
+        };
+        initTheme();
+
+        document.getElementById('theme-toggle').addEventListener('click', () => {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('darkMode', isDark);
+            document.getElementById('theme-toggle').textContent = isDark ? '🌙' : '🌞';
+        });
+
         const authToken = localStorage.getItem('authToken');
         if (authToken) {
             fetch('/auth/me', { headers: { 'Authorization': `Bearer ${authToken}` } })
