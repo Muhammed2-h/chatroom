@@ -36,7 +36,8 @@ const els = {
     pinnedBar: $('pinned-message-bar'), pinnedContent: $('pinned-message-content'),
     unpinBtn: $('unpin-btn'), msgTemplate: $('msg-template'),
     connectionStatus: $('connection-status'),
-    availableRoomsDiv: $('available-rooms')
+    availableRoomsDiv: $('available-rooms'),
+    cancelJoinBtn: $('cancel-join-btn')
 };
 
 let roomId = new URLSearchParams(window.location.search).get('room');
@@ -171,6 +172,7 @@ const showRoomSelection = () => {
     els.roomSelection.style.display = 'flex';
     els.chatInterface.style.display = 'none';
     els.initialRoomInput.focus();
+    els.cancelJoinBtn.style.display = 'none';
     fetchRooms();
 };
 
@@ -245,6 +247,8 @@ const initJoinMode = () => {
         disabled: false, value: ''
     });
 
+    els.cancelJoinBtn.style.display = 'block';
+
     if (roomId === 'world') {
         els.mainInput.style.display = 'none';
         els.actionBtn.textContent = 'Join World';
@@ -295,6 +299,7 @@ const switchToChatMode = () => {
     }
 
     $('status-message')?.remove();
+    els.cancelJoinBtn.style.display = 'none';
     startPolling();
 };
 
@@ -703,6 +708,7 @@ els.setRoomBtn.addEventListener('click', () => {
 });
 
 els.leaveRoomBtn.addEventListener('click', leaveRoom);
+els.cancelJoinBtn.addEventListener('click', showRoomSelection);
 
 // Auto-fetch rooms on load if likely to show selection
 els.initialRoomInput.addEventListener('keypress', (e) => e.key === 'Enter' && els.setRoomBtn.click());
