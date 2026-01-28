@@ -182,6 +182,12 @@ const initJoinMode = () => {
     if (roomId === 'world') {
         els.mainInput.style.display = 'none';
         els.actionBtn.textContent = 'Join World';
+
+        // Auto-join World Chat if name exists
+        const nameVal = els.nameInput.value.trim();
+        if (nameVal && (authToken || savedDisplayName)) {
+            setTimeout(() => els.form.dispatchEvent(new Event('submit')), 100);
+        }
     } else {
         els.mainInput.style.display = 'block';
         els.actionBtn.textContent = 'Join';
